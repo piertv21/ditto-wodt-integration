@@ -1,4 +1,4 @@
-# Eclipse Ditto Java Client examples
+# Eclipse Ditto WoDT Integration
 
 An integration for Eclipse Ditto that allows interaction with Ditto Thing as Digital Twins in the WoDT Platform.
 
