@@ -12,15 +12,23 @@
  */
 package org.eclipse.ditto.wodt.common;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.neovisionaries.ws.client.WebSocket;
+import java.nio.ByteBuffer;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import org.eclipse.ditto.base.model.auth.AuthorizationSubject;
 import org.eclipse.ditto.base.model.json.JsonSchemaVersion;
 import org.eclipse.ditto.client.DisconnectedDittoClient;
 import org.eclipse.ditto.client.DittoClient;
 import org.eclipse.ditto.client.DittoClients;
-import org.eclipse.ditto.client.configuration.*;
+import org.eclipse.ditto.client.configuration.BasicAuthenticationConfiguration;
+import org.eclipse.ditto.client.configuration.ClientCredentialsAuthenticationConfiguration;
+import org.eclipse.ditto.client.configuration.MessagingConfiguration;
+import org.eclipse.ditto.client.configuration.ProxyConfiguration;
+import org.eclipse.ditto.client.configuration.WebSocketMessagingConfiguration;
 import org.eclipse.ditto.client.live.internal.MessageSerializerFactory;
 import org.eclipse.ditto.client.live.messages.MessageSerializerRegistry;
 import org.eclipse.ditto.client.live.messages.MessageSerializers;
@@ -28,15 +36,12 @@ import org.eclipse.ditto.client.messaging.AuthenticationProvider;
 import org.eclipse.ditto.client.messaging.AuthenticationProviders;
 import org.eclipse.ditto.client.messaging.MessagingProvider;
 import org.eclipse.ditto.client.messaging.MessagingProviders;
-import org.eclipse.ditto.wodt.common.model.ExampleUser;
 import org.eclipse.ditto.things.model.ThingId;
+import org.eclipse.ditto.wodt.common.model.ExampleUser;
 
-import java.nio.ByteBuffer;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.neovisionaries.ws.client.WebSocket;
 
 /**
  * Reads configuration properties and instantiates {@link org.eclipse.ditto.client.DittoClient}s.
@@ -45,13 +50,11 @@ public abstract class ExamplesBase {
 
     private static final ConfigProperties CONFIG_PROPERTIES = ConfigProperties.getInstance();
     protected final DittoClient client1;
-    protected final DittoClient client2;
     protected AuthorizationSubject authorizationSubject;
 
     protected ExamplesBase() {
         try {
             client1 = buildClient().connect().toCompletableFuture().get(10, TimeUnit.SECONDS);
-            client2 = buildClient().connect().toCompletableFuture().get(10, TimeUnit.SECONDS);
         } catch (final InterruptedException | ExecutionException | TimeoutException e) {
             throw new RuntimeException(e);
         }
@@ -166,7 +169,6 @@ public abstract class ExamplesBase {
      */
     public void terminate() {
         client1.destroy();
-        client2.destroy();
     }
 
 

@@ -12,3 +12,5 @@ The configured usernames and passwords must be added to the nginx.htpasswd of Ec
 ```bash
 htpasswd nginx.htpasswd user1
 ```
+
+Note: some libraries such as "wot-servient" may have to be installed manually.
