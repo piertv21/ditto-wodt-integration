@@ -12,7 +12,7 @@ import io.github.sanecity.wot.thing.property.ThingProperty;
 /*
  * Module entrypoint
  */
-public class Server {
+public class App {
     
     public static void main(String[] args) throws WotException {
         Wot wot = new DefaultWot();
