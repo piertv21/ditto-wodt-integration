@@ -1,51 +1,62 @@
 package org.eclipse.ditto.wodt;
 
-import io.github.sanecity.wot.DefaultWot;
-import io.github.sanecity.wot.Wot;
-import io.github.sanecity.wot.WotException;
-import io.github.sanecity.wot.thing.ExposedThing;
-import io.github.sanecity.wot.thing.Thing;
-import io.github.sanecity.wot.thing.form.Form;
-import io.github.sanecity.wot.thing.form.Operation;
-import io.github.sanecity.wot.thing.property.ThingProperty;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import org.eclipse.ditto.client.DittoClient;
+import org.eclipse.ditto.things.model.Thing;
+import org.eclipse.ditto.things.model.ThingId;
+import org.eclipse.ditto.wodt.common.ExamplesBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
  * Module entrypoint
  */
-public class App {
+public class App extends ExamplesBase {
     
-    public static void main(String[] args) throws WotException {
-        Wot wot = new DefaultWot();
+    private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 
-        Thing thing;
-        thing = new Thing.Builder()
-                .setId("counter")
-                .setTitle("My Counter")
-                .setDescription("This is a simple counter thing")
-                .addForm(
-                        new Form.Builder()
-                                .addOp(Operation.OBSERVE_PROPERTY)
-                                .setHref("ws://localhost:3650/dtkg")
-                                .setSubprotocol("websocket")
-                                .build()
-                )
-                .build();
+    private final CountDownLatch countDownLatch;
 
+    private App() {
+        super();
+        this.countDownLatch = new CountDownLatch(2);
 
+        try {
+            registerForThingChanges(client1);
+            startConsumeChanges(client1);
+        } finally {
+            destroy();
+        }
+    }
 
-        ExposedThing exposedThing = wot.produce(thing);
-        exposedThing.addProperty("count", new ThingProperty.Builder()
-                        .setType("integer")
-                        .setDescription("current counter value")
-                        .setObservable(true)
-                        .setReadOnly(true)
-                        .build(),
-            42);
+    public static void main(final String... args) {
+        new App();
+    }
 
-            System.out.println(exposedThing.toJson());
+    /**
+     * Register for all {@code ThingChange}s.
+     */
+    private void registerForThingChanges(final DittoClient client) {
+        Thing thing = client.twin().forId(
+            ThingId.of("com.example.namespace:79f03bdc-75ea-44d9-9232-befdf5b7e683")
+        ).retrieve().toCompletableFuture().join();
 
-        exposedThing.expose();
-        wot.destroy();
+        System.out.println(
+            thing.getAttributes().get().getField("manufacturer").get().getValue().asString()
+        );
+    }
+
+    private void destroy() {
+        final boolean allMessagesReceived;
+        try {
+            allMessagesReceived = countDownLatch.await(10, TimeUnit.SECONDS);
+        } catch (final InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
+        LOGGER.info("All changes received: {}", allMessagesReceived);
+        terminate();
     }
     
 }
