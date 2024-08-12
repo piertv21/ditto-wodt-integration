@@ -16,11 +16,11 @@ package org.eclipse.ditto.wodt.WoDTShadowingAdapter.api;
  * limitations under the License.
  */
 
-import io.github.webbasedwodt.model.ontology.DTOntology;
-
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.eclipse.ditto.wodt.model.ontology.DTOntology;
 
 /**
  * Configuration for the {@link WoDTDigitalAdapter}.

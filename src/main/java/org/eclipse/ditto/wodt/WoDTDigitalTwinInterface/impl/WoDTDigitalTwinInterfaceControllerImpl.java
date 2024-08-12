@@ -16,21 +16,22 @@ package org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.impl;
  * limitations under the License.
  */
 
-import io.github.webbasedwodt.application.component.DTDManagerReader;
-import io.github.webbasedwodt.application.component.DTKGEngineReader;
-import io.github.webbasedwodt.application.component.WoDTDigitalTwinInterfaceController;
-import io.github.webbasedwodt.model.ontology.WoDTVocabulary;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.BiFunction;
+
+import org.eclipse.ditto.wodt.DTDManager.api.DTDManagerReader;
+import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngineReader;
+import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.api.WoDTDigitalTwinInterfaceController;
+import org.eclipse.ditto.wodt.model.ontology.WoDTVocabulary;
+
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.Header;
 import io.javalin.http.HttpStatus;
 import io.javalin.websocket.WsConfig;
 import io.javalin.websocket.WsContext;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.BiFunction;
 
 /**
  * Implementation of the controller for the WoDT Digital Twins Interface component of the Abstract Architecture.

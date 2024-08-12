@@ -16,6 +16,8 @@ package org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.api;
  * limitations under the License.
  */
 
+import org.eclipse.ditto.wodt.common.WebServerController;
+
 import io.javalin.http.Context;
 import io.javalin.websocket.WsConfig;
 

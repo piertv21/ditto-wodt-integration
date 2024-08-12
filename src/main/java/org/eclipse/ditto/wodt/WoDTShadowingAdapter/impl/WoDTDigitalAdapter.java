@@ -16,10 +16,11 @@ package org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl;
  * limitations under the License.
  */
 
-import io.github.webbasedwodt.application.component.DTDManager;
-import io.github.webbasedwodt.application.component.DTKGEngine;
-import io.github.webbasedwodt.application.component.PlatformManagementInterface;
-import io.github.webbasedwodt.application.component.WoDTWebServer;
+import org.eclipse.ditto.wodt.DTDManager.api.DTDManager;
+import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
+import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterface;
+import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.api.WoDTWebServer;
+
 import it.wldt.adapter.digital.DigitalAdapter;
 import it.wldt.core.state.DigitalTwinState;
 import it.wldt.core.state.DigitalTwinStateChange;

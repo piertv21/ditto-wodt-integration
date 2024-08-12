@@ -18,10 +18,10 @@ package org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.impl;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.gson.JsonParseException;
-import io.github.webbasedwodt.application.component.DTDManagerReader;
-import io.github.webbasedwodt.application.component.DTKGEngine;
-import io.github.webbasedwodt.application.component.PlatformManagementInterfaceNotifier;
-import io.github.webbasedwodt.application.component.WoDTWebServer;
+import org.eclipse.ditto.wodt.DTDManager.api.DTDManagerReader;
+import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
+import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterfaceNotifier;
+import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.api.WoDTWebServer;
 import io.javalin.Javalin;
 import io.javalin.http.HttpStatus;
 
