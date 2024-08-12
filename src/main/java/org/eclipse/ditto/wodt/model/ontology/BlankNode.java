@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package io.github.webbasedwodt.model.ontology;
-
-import org.apache.commons.lang3.tuple.Pair;
+package org.eclipse.ditto.wodt.model.ontology;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * It models the concept of RDF Blank Node in the context of Digital Twin Knowledge Graph.

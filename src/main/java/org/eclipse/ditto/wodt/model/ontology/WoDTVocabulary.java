@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.webbasedwodt.model.ontology;
+package org.eclipse.ditto.wodt.model.ontology;
 
 /**
  * This enum contains the needed elements of the WoDT vocabulary.

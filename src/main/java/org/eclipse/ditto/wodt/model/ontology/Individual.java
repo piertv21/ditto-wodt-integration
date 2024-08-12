@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.webbasedwodt.model.ontology;
+package org.eclipse.ditto.wodt.model.ontology;
 
 import java.util.Optional;
 

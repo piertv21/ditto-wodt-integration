@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package io.github.webbasedwodt.model.ontology;
-
-import org.apache.commons.lang3.tuple.Pair;
+package org.eclipse.ditto.wodt.model.ontology;
 
 import java.util.Optional;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * It models the ontology followed by the Digital Twin.
