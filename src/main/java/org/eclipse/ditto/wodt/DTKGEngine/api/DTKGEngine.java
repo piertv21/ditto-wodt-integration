@@ -16,10 +16,9 @@ package org.eclipse.ditto.wodt.DTKGEngine.api;
  * limitations under the License.
  */
 
-import io.github.webbasedwodt.application.component.observer.DTKGObserver;
-import io.github.webbasedwodt.model.ontology.Individual;
-import io.github.webbasedwodt.model.ontology.Node;
-import io.github.webbasedwodt.model.ontology.Property;
+import org.eclipse.ditto.wodt.model.ontology.Individual;
+import org.eclipse.ditto.wodt.model.ontology.Node;
+import org.eclipse.ditto.wodt.model.ontology.Property;
 
 /**
  * This interface models the DTKGEngine component of the Abstract Architecture in a compatible way with the WLDT

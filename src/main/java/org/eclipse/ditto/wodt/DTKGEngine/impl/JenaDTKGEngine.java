@@ -16,14 +16,14 @@ package org.eclipse.ditto.wodt.DTKGEngine.impl;
  * limitations under the License.
  */
 
-import io.github.webbasedwodt.application.component.DTKGEngine;
-import io.github.webbasedwodt.application.component.observer.DTKGObserver;
-import io.github.webbasedwodt.model.ontology.BlankNode;
-import io.github.webbasedwodt.model.ontology.Individual;
-import io.github.webbasedwodt.model.ontology.Literal;
-import io.github.webbasedwodt.model.ontology.Node;
-import io.github.webbasedwodt.model.ontology.Property;
-import io.github.webbasedwodt.model.ontology.WoDTVocabulary;
+import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
+import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGObserver;
+import org.eclipse.ditto.wodt.model.ontology.BlankNode;
+import org.eclipse.ditto.wodt.model.ontology.Individual;
+import org.eclipse.ditto.wodt.model.ontology.Literal;
+import org.eclipse.ditto.wodt.model.ontology.Node;
+import org.eclipse.ditto.wodt.model.ontology.Property;
+import org.eclipse.ditto.wodt.model.ontology.WoDTVocabulary;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -168,7 +168,7 @@ final class JenaDTKGEngine implements DTKGEngine {
 
     private void addProperty(final Resource resourceToAdd, final Pair<Property, Node> predicate) {
         final String propertyUri = predicate.getLeft().getUri().orElse("");
-        final var property = this.dtkgModel.createProperty(propertyUri);
+        final org.apache.jena.rdf.model.Property property = this.dtkgModel.createProperty(propertyUri);
         if (predicate.getRight() instanceof Property) {
             resourceToAdd.addProperty(
                     property,
