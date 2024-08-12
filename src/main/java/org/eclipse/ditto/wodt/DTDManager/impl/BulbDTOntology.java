@@ -21,37 +21,44 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.eclipse.ditto.wodt.model.ontology.DTOntology;
-import io.github.webbasedwodt.model.ontology.Individual;
-import io.github.webbasedwodt.model.ontology.Literal;
-import io.github.webbasedwodt.model.ontology.Node;
-import io.github.webbasedwodt.model.ontology.Property;
+import org.eclipse.ditto.wodt.model.ontology.Individual;
+import org.eclipse.ditto.wodt.model.ontology.Literal;
+import org.eclipse.ditto.wodt.model.ontology.Node;
+import org.eclipse.ditto.wodt.model.ontology.Property;
 
+// TODO: this implementation must be modified to reflect the actual ontology of the digital twin
 /**
  * Ontology for the {@link LampDT}.
  */
 public final class BulbDTOntology implements DTOntology {
-    private static Map<String, Pair<String, String>> propertyMap = Map.of(
-            "is-on-property-key", Pair.of(
-                    "https://lampontology.com/ontology#isOn",
-                    "https://www.w3.org/2001/XMLSchema#boolean"
-            )
+    private static final Map<String, Pair<String, String>> propertyMap = Map.of(
+        "manufacturer", Pair.of(
+                "https://bulbontology.com/ontology#manufacturer",
+                "https://www.w3.org/2001/XMLSchema#string"
+        ),
+        "is-on", Pair.of(
+                "https://bulbontology.com/ontology#isOn",
+                "https://www.w3.org/2001/XMLSchema#boolean"
+        )
     );
-    private static Map<String, Pair<String, String>> relationshipMap = Map.of(
-            "located-inside", Pair.of(
-                    "https://lampontology/ontology#isLocatedInside",
-                    "https://homeontology/ontology#Room"
-            )
+    
+    private static final Map<String, Pair<String, String>> relationshipMap = Map.of(
+        "located-inside", Pair.of(
+                "https://bulbontology/ontology#isLocatedInside",
+                "https://homeontology/ontology#Room"
+        )
     );
 
-    private static Map<String, String> actionMap = Map.of(
-            "switch-action-key", "https://lampontology.com/ontology#SwitchCommand"
+    private static final Map<String, String> actionMap = Map.of(
+        "toggle-all-bulbs", "https://bulbontology.com/ontology#ToggleBulbs"
     );
+
+    // TO DO: aggiungi eventMap + funzioni sotto
 
     @Override
     public String getDigitalTwinType() {
-        return "https://lampontology.com/ontology#Lamp";
+        return "https://bulbontology.com/ontology#Bulb";
     }
 
     @Override

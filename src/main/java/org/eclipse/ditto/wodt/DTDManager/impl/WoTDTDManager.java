@@ -16,6 +16,19 @@ package org.eclipse.ditto.wodt.DTDManager.impl;
  * limitations under the License.
  */
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.eclipse.ditto.wodt.DTDManager.api.DTDManager;
+import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterfaceReader;
+import org.eclipse.ditto.wodt.model.ontology.DTOntology;
+import org.eclipse.ditto.wodt.model.ontology.Property;
+import org.eclipse.ditto.wodt.model.ontology.WoDTVocabulary;
+
 import io.github.sanecity.wot.DefaultWot;
 import io.github.sanecity.wot.WotException;
 import io.github.sanecity.wot.thing.Context;
@@ -27,18 +40,6 @@ import io.github.sanecity.wot.thing.form.Form;
 import io.github.sanecity.wot.thing.form.Operation;
 import io.github.sanecity.wot.thing.property.ExposedThingProperty;
 import io.github.sanecity.wot.thing.property.ThingProperty;
-import io.github.webbasedwodt.application.component.DTDManager;
-import io.github.webbasedwodt.application.component.PlatformManagementInterfaceReader;
-import io.github.webbasedwodt.model.ontology.DTOntology;
-import io.github.webbasedwodt.model.ontology.Property;
-import io.github.webbasedwodt.model.ontology.WoDTVocabulary;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * This class provide an implementation of the {@link io.github.webbasedwodt.application.component.DTDManager} using
@@ -56,7 +57,7 @@ final class WoTDTDManager implements DTDManager {
     private final Map<String, ThingProperty<Object>> properties;
     private final Map<String, ThingProperty<Object>> relationships;
     private final Map<String, ThingAction<Object, Object>> actions;
-
+    // TO DO: aggiungi eventi
 
     /**
      * Default constructor.
@@ -134,7 +135,7 @@ final class WoTDTDManager implements DTDManager {
             thingDescription.getActions().forEach((name, action) ->
                 action.addForm(new Form.Builder()
                         .addOp(Operation.INVOKE_ACTION)
-                        .setHref("http://localhost:" + this.portNumber + "/action/" + name)
+                        .setHref("http://localhost:" + this.portNumber + "/action/" + name) // TO DO: edit qui
                         .build())
             );
             return thingDescription;
@@ -143,7 +144,7 @@ final class WoTDTDManager implements DTDManager {
         }
     }
 
-    //TO DO inserisci le context extension in @context nel TD finale
+    // TODO: inserisci le context extension in @context nel TD finale
     private void initializeThingDescription(final ExposedThing thingDescription) {
         thingDescription.setObjectType(new Type(this.ontology.getDigitalTwinType()));
         thingDescription.addProperty(SNAPSHOT_DTD_PROPERTY, new ExposedThingProperty.Builder()
