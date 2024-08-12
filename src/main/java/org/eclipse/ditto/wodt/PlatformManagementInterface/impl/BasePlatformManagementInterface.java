@@ -16,8 +16,6 @@ package org.eclipse.ditto.wodt.PlatformManagementInterface.impl;
  * limitations under the License.
  */
 
-import io.github.webbasedwodt.application.component.PlatformManagementInterface;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -27,6 +25,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterface;
 
 /**
  * Base implementation of the {@link PlatformManagementInterface}.

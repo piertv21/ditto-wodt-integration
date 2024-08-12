@@ -16,14 +16,15 @@ package org.eclipse.ditto.wodt.PlatformManagementInterface.impl;
  * limitations under the License.
  */
 
-import io.github.webbasedwodt.application.component.PlatformManagementInterfaceAPIController;
-import io.github.webbasedwodt.application.component.PlatformManagementInterfaceNotifier;
-import io.github.webbasedwodt.application.presenter.api.PlatformRegistration;
+import java.net.URI;
+
+import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterfaceAPIController;
+import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterfaceNotifier;
+import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformRegistration;
+
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
-
-import java.net.URI;
 
 /**
  * Implementation of the controller for the Platform Management Interface API.
