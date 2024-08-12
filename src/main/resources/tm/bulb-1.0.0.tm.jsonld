@@ -1,0 +1,30 @@
+{
+  "@context": [
+    "https://www.w3.org/2022/wot/td/v1.1",
+    {
+      "time": "http://www.w3.org/2006/time#"
+    }
+  ],
+  "@type": "tm:ThingModel",
+  "title": "Bulb",
+  "version": {
+    "model": "1.0.0"
+  },
+  "tm:optional": [],
+  "properties": {
+    "on": {
+      "title": "On",
+      "description": "Whether the bulb is on or off.",
+      "type": "boolean"
+    }
+  },
+  "actions": {
+    "toggle": {
+      "title": "Toggle",
+      "description": "Toggles/inverts the current 'on' state.",
+      "output": {
+        "type": "boolean"
+      }
+    }
+  }
+}

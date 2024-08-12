@@ -143,6 +143,7 @@ final class WoTDTDManager implements DTDManager {
         }
     }
 
+    //TO DO inserisci le context extension in @context nel TD finale
     private void initializeThingDescription(final ExposedThing thingDescription) {
         thingDescription.setObjectType(new Type(this.ontology.getDigitalTwinType()));
         thingDescription.addProperty(SNAPSHOT_DTD_PROPERTY, new ExposedThingProperty.Builder()

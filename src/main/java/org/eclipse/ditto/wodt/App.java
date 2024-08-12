@@ -40,11 +40,12 @@ public class App extends ExamplesBase {
      */
     private void registerForThingChanges(final DittoClient client) {
         Thing thing = client.twin().forId(
-            ThingId.of("com.example.namespace:79f03bdc-75ea-44d9-9232-befdf5b7e683")
+            ThingId.of("io.eclipseprojects.ditto:bulb")
         ).retrieve().toCompletableFuture().join();
 
         System.out.println(
-            thing.getAttributes().get().getField("manufacturer").get().getValue().asString()
+            //thing.getAttributes().get().getField("manufacturer").get().getValue().asString()
+            thing.toJsonString()
         );
     }
 

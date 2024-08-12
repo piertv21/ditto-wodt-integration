@@ -42,6 +42,11 @@
             <artifactId>wot-servient</artifactId>
             <version>1.16-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>io.javalin</groupId>
+            <artifactId>javalin</artifactId>
+            <version>6.2.0</version>
+        </dependency>
     </dependencies>
 
     <build>
