@@ -16,14 +16,10 @@ package org.eclipse.ditto.wodt.DTKGEngine.impl;
  * limitations under the License.
  */
 
-import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
-import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGObserver;
-import org.eclipse.ditto.wodt.model.ontology.BlankNode;
-import org.eclipse.ditto.wodt.model.ontology.Individual;
-import org.eclipse.ditto.wodt.model.ontology.Literal;
-import org.eclipse.ditto.wodt.model.ontology.Node;
-import org.eclipse.ditto.wodt.model.ontology.Property;
-import org.eclipse.ditto.wodt.model.ontology.WoDTVocabulary;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -32,10 +28,14 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFWriter;
 import org.apache.jena.shared.Lock;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
+import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
+import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGObserver;
+import org.eclipse.ditto.wodt.model.ontology.BlankNode;
+import org.eclipse.ditto.wodt.model.ontology.Individual;
+import org.eclipse.ditto.wodt.model.ontology.Literal;
+import org.eclipse.ditto.wodt.model.ontology.Node;
+import org.eclipse.ditto.wodt.model.ontology.Property;
+import org.eclipse.ditto.wodt.model.ontology.WoDTVocabulary;
 
 /**
  * This class provides an implementation of the {@link io.github.webbasedwodt.application.component.DTKGEngine} using
@@ -168,7 +168,7 @@ final class JenaDTKGEngine implements DTKGEngine {
 
     private void addProperty(final Resource resourceToAdd, final Pair<Property, Node> predicate) {
         final String propertyUri = predicate.getLeft().getUri().orElse("");
-        final org.apache.jena.rdf.model.Property property = this.dtkgModel.createProperty(propertyUri);
+        final org.apache.jena.rdf.model.Property property = this.dtkgModel.createProperty(propertyUri); // TO DO potrebbe dare errore
         if (predicate.getRight() instanceof Property) {
             resourceToAdd.addProperty(
                     property,

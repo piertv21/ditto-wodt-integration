@@ -21,8 +21,7 @@ import org.eclipse.ditto.wodt.model.ontology.Node;
 import org.eclipse.ditto.wodt.model.ontology.Property;
 
 /**
- * This interface models the DTKGEngine component of the Abstract Architecture in a compatible way with the WLDT
-* Framework.
+ * This interface models the DTKGEngine component of the Abstract Architecture in a compatible way with Ditto. TO DO: modifica per ditto + events
 */
 public interface DTKGEngine extends DTKGEngineReader {
     /**

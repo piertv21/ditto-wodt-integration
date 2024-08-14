@@ -29,14 +29,14 @@ import io.javalin.http.HttpStatus;
 /**
  * Implementation of the controller for the Platform Management Interface API.
 */
-final class PlatformManagementInterfaceAPIControllerImpl implements PlatformManagementInterfaceAPIController {
+final public class PlatformManagementInterfaceAPIControllerImpl implements PlatformManagementInterfaceAPIController {
     private final PlatformManagementInterfaceNotifier platformManagementInterfaceNotifier;
 
     /**
      * Default constructor.
     * @param platformManagementInterfaceNotifier the platform management interface notifier that handle registrations
     */
-    PlatformManagementInterfaceAPIControllerImpl(
+    public PlatformManagementInterfaceAPIControllerImpl(
             final PlatformManagementInterfaceNotifier platformManagementInterfaceNotifier
     ) {
         this.platformManagementInterfaceNotifier = platformManagementInterfaceNotifier;

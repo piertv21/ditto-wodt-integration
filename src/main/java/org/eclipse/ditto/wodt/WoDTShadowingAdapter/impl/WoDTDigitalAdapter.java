@@ -37,8 +37,10 @@ import it.wldt.exception.WldtDigitalTwinStatePropertyException;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
+import org.eclipse.ditto.wodt.WoDTShadowingAdapter.api.WoDTDigitalAdapterConfiguration;
+
 /**
- * This class represents the WLDT Framework Digital Adapter that allows to implement the WoDT Digital Twin layer
+ * This class represents the Eclipse Ditto Adapter that allows to implement the WoDT Digital Twin layer
 * implementing the components of the Abstract Architecture.
 */
 public final class WoDTDigitalAdapter extends DigitalAdapter<WoDTDigitalAdapterConfiguration> {
@@ -70,7 +72,7 @@ public final class WoDTDigitalAdapter extends DigitalAdapter<WoDTDigitalAdapterC
                 this.dtdManager,
                 (actionName, body) -> {
                     try {
-                        publishDigitalActionWldtEvent(actionName, body);
+                        publishDigitalActionWldtEvent(actionName, body); // TO DO: cambia qui
                         return true;
                     } catch (EventBusException e) {
                         Logger.getLogger(WoDTDigitalAdapter.class.getName())

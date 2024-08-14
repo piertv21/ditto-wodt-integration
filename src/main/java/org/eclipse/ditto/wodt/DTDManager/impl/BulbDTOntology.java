@@ -38,7 +38,7 @@ public final class BulbDTOntology implements DTOntology {
                 "https://www.w3.org/2001/XMLSchema#string"
         ),
         "is-on", Pair.of(
-                "https://bulbontology.com/ontology#isOn",
+                "https://bulbontology.com/ontology#on",
                 "https://www.w3.org/2001/XMLSchema#boolean"
         )
     );

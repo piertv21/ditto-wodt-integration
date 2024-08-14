@@ -21,6 +21,7 @@ import com.google.gson.JsonParseException;
 import org.eclipse.ditto.wodt.DTDManager.api.DTDManagerReader;
 import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
 import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterfaceNotifier;
+import org.eclipse.ditto.wodt.PlatformManagementInterface.impl.PlatformManagementInterfaceAPIControllerImpl;
 import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.api.WoDTWebServer;
 import io.javalin.Javalin;
 import io.javalin.http.HttpStatus;

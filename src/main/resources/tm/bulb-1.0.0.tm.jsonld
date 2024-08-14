@@ -1,28 +1,31 @@
 {
   "@context": [
-    "https://www.w3.org/2022/wot/td/v1.1",
-    {
-      "time": "http://www.w3.org/2006/time#"
-    }
+    "https://www.w3.org/2022/wot/td/v1.1"
   ],
   "@type": "tm:ThingModel",
   "title": "Bulb",
+  "description": "A simple bulb.",
   "version": {
     "model": "1.0.0"
   },
-  "tm:optional": [],
   "properties": {
     "on": {
-      "title": "On",
-      "description": "Whether the bulb is on or off.",
+      "title": "On/Off Status",
+      "description": "Indicates whether the bulb is on or off.",
       "type": "boolean"
     }
   },
   "actions": {
     "toggle": {
-      "title": "Toggle",
-      "description": "Toggles/inverts the current 'on' state.",
-      "output": {
+      "title": "Toggle Power",
+      "description": "Toggles the power state of the bulb."
+    }
+  },
+  "events": {
+    "burnt-out-bulb": {
+      "title": "Burnt Out Bulb",
+      "description": "Indicates that the bulb has burnt out.",
+      "data": {
         "type": "boolean"
       }
     }
