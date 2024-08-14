@@ -16,18 +16,18 @@ package org.eclipse.ditto.wodt.common.model;
  * This model class demonstrates how to use a custom serialization (in this case JSON-Serialization with Jackson) for
  * Messages.
  */
-public class ExampleUser {
+public class User {
 
     public static final String USER_CUSTOM_CONTENT_TYPE = "application/vnd.my-company.user+json";
 
     private String userName;
     private String email;
 
-    public ExampleUser() {
+    public User() {
         super();
     }
 
-    public ExampleUser(final String userName, final String email) {
+    public User(final String userName, final String email) {
         this.userName = userName;
         this.email = email;
     }

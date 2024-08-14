@@ -54,7 +54,10 @@ public final class WoDTDigitalAdapter extends DigitalAdapter<WoDTDigitalAdapterC
     * @param digitalAdapterId the id of the Digital Adapter
     * @param configuration the configuration of the Digital Adapter
     */
-    public WoDTDigitalAdapter(final String digitalAdapterId, final WoDTDigitalAdapterConfiguration configuration) {
+    public WoDTDigitalAdapter(
+        final String digitalAdapterId,
+        final WoDTDigitalAdapterConfiguration configuration
+    ) {
         super(digitalAdapterId, configuration);
         this.platformManagementInterface = new BasePlatformManagementInterface(
                 this.getConfiguration().getDigitalTwinUri());

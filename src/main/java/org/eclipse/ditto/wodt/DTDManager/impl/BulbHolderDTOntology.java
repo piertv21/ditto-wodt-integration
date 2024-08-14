@@ -31,34 +31,34 @@ import org.eclipse.ditto.wodt.model.ontology.Property;
 /**
  * Ontology for the {@link LampDT}.
  */
-public final class BulbDTOntology implements DTOntology {
+public final class BulbHolderDTOntology implements DTOntology {
     private static final Map<String, Pair<String, String>> propertyMap = Map.of(
         "manufacturer", Pair.of(
-                "https://bulbontology.com/ontology#manufacturer",
+                "https://bulbholderontology.com/ontology#manufacturer",
                 "https://www.w3.org/2001/XMLSchema#string"
         ),
         "is-on", Pair.of(
-                "https://bulbontology.com/ontology#on",
+                "https://bulbholderontology.com/ontology#on",
                 "https://www.w3.org/2001/XMLSchema#boolean"
         )
     );
     
     private static final Map<String, Pair<String, String>> relationshipMap = Map.of(
         "located-inside", Pair.of(
-                "https://bulbontology/ontology#isLocatedInside",
+                "https://bulbholderontology/ontology#isLocatedInside",
                 "https://homeontology/ontology#Room"
         )
     );
 
     private static final Map<String, String> actionMap = Map.of(
-        "toggle-all-bulbs", "https://bulbontology.com/ontology#ToggleBulbs"
+        "toggle-all-bulbs", "https://bulbholderontology.com/ontology#ToggleBulbs"
     );
 
     // TO DO: aggiungi eventMap + funzioni sotto
 
     @Override
     public String getDigitalTwinType() {
-        return "https://bulbontology.com/ontology#Bulb";
+        return "https://bulbholderontology.com/ontology#Bulb";
     }
 
     @Override

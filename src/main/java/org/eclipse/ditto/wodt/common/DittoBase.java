@@ -14,7 +14,6 @@ package org.eclipse.ditto.wodt.common;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -36,8 +35,7 @@ import org.eclipse.ditto.client.messaging.AuthenticationProvider;
 import org.eclipse.ditto.client.messaging.AuthenticationProviders;
 import org.eclipse.ditto.client.messaging.MessagingProvider;
 import org.eclipse.ditto.client.messaging.MessagingProviders;
-import org.eclipse.ditto.things.model.ThingId;
-import org.eclipse.ditto.wodt.common.model.ExampleUser;
+import org.eclipse.ditto.wodt.common.model.User;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,22 +44,18 @@ import com.neovisionaries.ws.client.WebSocket;
 /**
  * Reads configuration properties and instantiates {@link org.eclipse.ditto.client.DittoClient}s.
  */
-public abstract class ExamplesBase {
+public abstract class DittoBase {
 
     private static final ConfigProperties CONFIG_PROPERTIES = ConfigProperties.getInstance();
-    protected final DittoClient client1;
+    protected final DittoClient client;
     protected AuthorizationSubject authorizationSubject;
 
-    protected ExamplesBase() {
+    protected DittoBase() {
         try {
-            client1 = buildClient().connect().toCompletableFuture().get(10, TimeUnit.SECONDS);
+            client = buildClient().connect().toCompletableFuture().get(10, TimeUnit.SECONDS); // TO DO: cambia
         } catch (final InterruptedException | ExecutionException | TimeoutException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    protected ThingId randomThingId() {
-        return ThingId.of(CONFIG_PROPERTIES.getNamespaceOrThrow(), UUID.randomUUID().toString());
     }
 
     protected void startConsumeChanges(final DittoClient client) {
@@ -121,15 +115,15 @@ public abstract class ExamplesBase {
     }
 
     /**
-     * Sets up a serializer/deserializer for the {@link org.eclipse.ditto.examples.common.model.ExampleUser} model class
+     * Sets up a serializer/deserializer for the {@link org.eclipse.ditto.User.common.model.ExampleUser} model class
      * which uses Jackson in order to serialize and deserialize messages which should directly be mapped to this type.
      */
-    private MessageSerializerRegistry buildMessageSerializerRegistry() {
+    private MessageSerializerRegistry buildMessageSerializerRegistry() { // TO DO: rimuovi ?
         final ObjectMapper objectMapper = new ObjectMapper();
         final MessageSerializerRegistry messageSerializerRegistry =
                 MessageSerializerFactory.initializeDefaultSerializerRegistry();
         messageSerializerRegistry.registerMessageSerializer(
-                MessageSerializers.of(ExampleUser.USER_CUSTOM_CONTENT_TYPE, ExampleUser.class, "*",
+                MessageSerializers.of(User.USER_CUSTOM_CONTENT_TYPE, User.class, "*",
                         (exampleUser, charset) -> {
                             try {
                                 return ByteBuffer.wrap(objectMapper.writeValueAsBytes(exampleUser));
@@ -138,7 +132,7 @@ public abstract class ExamplesBase {
                             }
                         }, (byteBuffer, charset) -> {
                             try {
-                                return objectMapper.readValue(byteBuffer.array(), ExampleUser.class);
+                                return objectMapper.readValue(byteBuffer.array(), User.class);
                             } catch (Exception e) {
                                 throw new IllegalStateException("Could not deserialize", e);
                             }
@@ -168,7 +162,7 @@ public abstract class ExamplesBase {
      * Destroys the client and waits for its graceful shutdown.
      */
     public void terminate() {
-        client1.destroy();
+        client.destroy();
     }
 
 

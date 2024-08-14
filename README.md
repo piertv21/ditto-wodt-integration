@@ -5,12 +5,18 @@ An integration for Eclipse Ditto that allows interaction with Ditto Thing as Dig
 ## Configure
 
 The module is preconfigured to work with a local Eclipse Ditto running in Docker. Find more information on
- [GitHub](https://github.com/eclipse/ditto/tree/master/deployment/docker).
+[GitHub](https://github.com/eclipse/ditto/tree/master/deployment/docker).
 
 You can change the configuration to your liking by editing `src/main/resources/config.properties`.
 The configured usernames and passwords must be added to the nginx.htpasswd of Eclipse Ditto.
+
 ```bash
 htpasswd nginx.htpasswd user1
 ```
+
+To add a Ditto Thing:
+- Edit Ditto Thing ID in the entrypoint
+- Add its Thing Models in resources/ folder
+- Add its Ontology in DTDManager/impl/ folder
 
 Note: some libraries such as "wot-servient" may have to be installed manually.

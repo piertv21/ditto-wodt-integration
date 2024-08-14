@@ -6,14 +6,14 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.ditto.client.DittoClient;
 import org.eclipse.ditto.things.model.Thing;
 import org.eclipse.ditto.things.model.ThingId;
-import org.eclipse.ditto.wodt.common.ExamplesBase;
+import org.eclipse.ditto.wodt.common.DittoBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*
  * Module entrypoint
  */
-public class App extends ExamplesBase {
+public class App extends DittoBase {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 
@@ -24,8 +24,8 @@ public class App extends ExamplesBase {
         this.countDownLatch = new CountDownLatch(2);
 
         try {
-            registerForThingChanges(client1);
-            startConsumeChanges(client1);
+            registerForThingChanges(client);
+            startConsumeChanges(client);
         } finally {
             destroy();
         }
