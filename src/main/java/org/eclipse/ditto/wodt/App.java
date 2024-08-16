@@ -1,24 +1,56 @@
 package org.eclipse.ditto.wodt;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.net.URI;
+import java.util.Set;
 
-import org.eclipse.ditto.client.DittoClient;
-import org.eclipse.ditto.things.model.Thing;
-import org.eclipse.ditto.things.model.ThingId;
+import org.eclipse.ditto.wodt.DTDManager.impl.BulbHolderDTOntology;
+import org.eclipse.ditto.wodt.WoDTShadowingAdapter.api.WoDTDigitalAdapterConfiguration;
+import org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl.WoDTDigitalAdapter;
 import org.eclipse.ditto.wodt.common.DittoBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*
- * Module entrypoint
+ * Application entry point.
  */
-public class App extends DittoBase {
-    
+public final class App extends DittoBase {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
+    
+    private WoDTDigitalAdapterConfiguration configuration;
+    private WoDTDigitalAdapter digitalAdapter;
 
-    private final CountDownLatch countDownLatch;
+    private static final int DITTO_PORT_NUMBER = 3000;
 
+    private App() {
+        super();
+        prova();
+        terminate();
+    }    
+
+    public void prova() {
+        this.configuration = new WoDTDigitalAdapterConfiguration(
+            "http://localhost:" + DITTO_PORT_NUMBER,
+            new BulbHolderDTOntology(),
+            DITTO_PORT_NUMBER,
+            "bulbHolderPA",
+            Set.of(URI.create("http://localhost:8979/api/1/things/bulbHolderPA"))
+        );
+        
+        this.digitalAdapter = new WoDTDigitalAdapter(
+            "wodt-dt-adapter",
+            this.configuration
+        );
+    }
+
+    public static void main(String[] args) {
+        new App();
+    }
+
+
+    
+
+    /*
     private App() {
         super();
         this.countDownLatch = new CountDownLatch(2);
@@ -35,9 +67,6 @@ public class App extends DittoBase {
         new App();
     }
 
-    /**
-     * Register for all {@code ThingChange}s.
-     */
     private void registerForThingChanges(final DittoClient client) {
         Thing thing = client.twin().forId(
             ThingId.of("io.eclipseprojects.ditto:floor-lamp-0815")
@@ -63,18 +92,18 @@ public class App extends DittoBase {
 
         
         // Stampa la definizione della Thing
-        /*System.out.println("Definition" + thing.getDefinition().get().toString());
+        System.out.println("Definition" + thing.getDefinition().get().toString());
 
         // Itera su tutte le features e stampa la loro definizione
         thing.getFeatures().ifPresent(features -> {
             features.forEach((feature) -> {
                 System.out.println(feature.getId() + ": " + feature.getDefinition().get().getFirstIdentifier() + "\n");                
             });
-        });*/
+        });
 
-        /*client.twin().forId(ThingId.of("io.eclipseprojects.ditto:bulb-holder")).registerForThingChanges("my-changes", change -> {
+        client.twin().forId(ThingId.of("io.eclipseprojects.ditto:bulb-holder")).registerForThingChanges("my-changes", change -> {
             System.out.println("Change received: " + change);
-        });*/
+        });
         
 
         System.out.println(
@@ -89,7 +118,7 @@ public class App extends DittoBase {
             
         );
 
-        /*final HttpClient httpClient = HttpClient.newHttpClient();
+        final HttpClient httpClient = HttpClient.newHttpClient();
 
         String auth = "ditto:ditto";
         String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
@@ -108,7 +137,7 @@ public class App extends DittoBase {
         //getThingModelUrls(thing).forEach(System.out::println);
         extractPropertiesActionsEvents(thing).get(2).forEach(System.out::println);
             
-        */
+        
     }
 
     private void destroy() {
@@ -120,6 +149,6 @@ public class App extends DittoBase {
         }
         LOGGER.info("All changes received: {}", allMessagesReceived);
         terminate();
-    }
+    }*/
     
 }
