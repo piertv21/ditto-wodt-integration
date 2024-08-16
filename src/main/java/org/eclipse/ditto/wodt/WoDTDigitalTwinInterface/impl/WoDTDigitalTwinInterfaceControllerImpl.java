@@ -43,7 +43,7 @@ final class WoDTDigitalTwinInterfaceControllerImpl implements WoDTDigitalTwinInt
     private final Set<WsContext> webSockets;
 
     /**
-     * Default constructor.
+    * Default constructor.
     * @param dtkgEngine the DTKG Engine
     * @param dtdManager the DTD Manager
     * @param actionHandler the handler for actions
@@ -123,6 +123,6 @@ final class WoDTDigitalTwinInterfaceControllerImpl implements WoDTDigitalTwinInt
         app.get("/dtkg", this::routeGetDigitalTwinKnowledgeGraph);
         app.get("/dtd", this::routeGetDigitalTwinDescriptor);
         app.ws("/dtkg", this::routeGetDigitalTwinKnowledgeGraphEvents);
-        app.post("/action/{actionName}", this::routeHandleActionInvocation);
+        app.post("/action/{actionName}", this::routeHandleActionInvocation); // TO DO: modifica
     }
 }

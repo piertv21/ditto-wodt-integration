@@ -29,7 +29,7 @@ public class Prova extends DittoBase {
             .join();
         
         //getThingModelUrls(thing).forEach(System.out::println);
-        extractPropertiesActionsEvents(thing).get(0).forEach(System.out::println);
+        extractPropertiesActionsEvents(thing).get(2).forEach(System.out::println);
     }
     
 }

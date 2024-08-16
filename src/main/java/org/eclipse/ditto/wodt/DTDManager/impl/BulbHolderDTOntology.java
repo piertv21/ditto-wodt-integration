@@ -27,38 +27,43 @@ import org.eclipse.ditto.wodt.model.ontology.Literal;
 import org.eclipse.ditto.wodt.model.ontology.Node;
 import org.eclipse.ditto.wodt.model.ontology.Property;
 
-// TODO: this implementation must be modified to reflect the actual ontology of the digital twin
 /**
  * Ontology for the {@link LampDT}.
  */
 public final class BulbHolderDTOntology implements DTOntology {
     private static final Map<String, Pair<String, String>> propertyMap = Map.of(
         "manufacturer", Pair.of(
-                "https://bulbholderontology.com/ontology#manufacturer",
+                "https://bhontology.com/ontology#manufacturer",
                 "https://www.w3.org/2001/XMLSchema#string"
         ),
-        "is-on", Pair.of(
-                "https://bulbholderontology.com/ontology#on",
+        "on", Pair.of(
+                "https://bulbontology.com/ontology#on",
                 "https://www.w3.org/2001/XMLSchema#boolean"
         )
     );
     
     private static final Map<String, Pair<String, String>> relationshipMap = Map.of(
         "located-inside", Pair.of(
-                "https://bulbholderontology/ontology#isLocatedInside",
+                "https://bhontology/ontology#isLocatedInside",
                 "https://homeontology/ontology#Room"
         )
     );
 
     private static final Map<String, String> actionMap = Map.of(
-        "toggle-all-bulbs", "https://bulbholderontology.com/ontology#ToggleBulbs"
+        "toggle-plug-cord-attachment", "https://bhontology.com/ontology#TogglePlugCordAttachment",
+        "toggle", "https://bulbontology.com/ontology#Toggle"
+    );
+
+    private static final Map<String, String> eventMap = Map.of(
+        "burnt-out-bulb", "https://bulbontology.com/ontology#BurntOutBulb",
+        "overheating", "https://bhontology.com/ontology#Overheating"
     );
 
     // TO DO: aggiungi eventMap + funzioni sotto
 
     @Override
     public String getDigitalTwinType() {
-        return "https://bulbholderontology.com/ontology#Bulb";
+        return "https://bhontology.com/ontology#BulbHolder";
     }
 
     @Override

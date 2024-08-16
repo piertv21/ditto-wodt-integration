@@ -40,19 +40,41 @@ public class App extends DittoBase {
      */
     private void registerForThingChanges(final DittoClient client) {
         Thing thing = client.twin().forId(
-            ThingId.of("io.eclipseprojects.ditto:bulb-holder")
+            ThingId.of("io.eclipseprojects.ditto:floor-lamp-0815")
         ).retrieve().toCompletableFuture().join();
+
+        thing.getAttributes().ifPresent(attributes -> {
+            attributes.forEach((attribute) -> {
+                System.out.println(attribute.getKey() + ": " + attribute.getValue().toString());
+            });
+        });
+
+        thing.getFeatures().ifPresent(features -> {
+            features.forEach((feature) -> {
+                System.out.println("Feature: " + feature.getId());
+                feature.getProperties().ifPresent(properties -> {
+                    properties.forEach((property) -> {
+                        System.out.println(property.getKey() + ": " + property.getValue().toString());
+                    });
+                });
+                System.out.println("\n");
+            });
+        });
 
         
         // Stampa la definizione della Thing
-        System.out.println("Definition" + thing.getDefinition().get().toString());
+        /*System.out.println("Definition" + thing.getDefinition().get().toString());
 
         // Itera su tutte le features e stampa la loro definizione
         thing.getFeatures().ifPresent(features -> {
             features.forEach((feature) -> {
                 System.out.println(feature.getId() + ": " + feature.getDefinition().get().getFirstIdentifier() + "\n");                
             });
-        });
+        });*/
+
+        /*client.twin().forId(ThingId.of("io.eclipseprojects.ditto:bulb-holder")).registerForThingChanges("my-changes", change -> {
+            System.out.println("Change received: " + change);
+        });*/
         
 
         System.out.println(
