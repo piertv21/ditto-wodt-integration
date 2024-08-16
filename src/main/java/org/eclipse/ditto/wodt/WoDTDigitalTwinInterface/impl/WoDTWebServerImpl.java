@@ -16,23 +16,25 @@ package org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.impl;
  * limitations under the License.
  */
 
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.google.gson.JsonParseException;
+import java.util.function.BiFunction;
+
 import org.eclipse.ditto.wodt.DTDManager.api.DTDManagerReader;
 import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
 import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterfaceNotifier;
 import org.eclipse.ditto.wodt.PlatformManagementInterface.impl.PlatformManagementInterfaceAPIControllerImpl;
 import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.api.WoDTWebServer;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.google.gson.JsonParseException;
+
 import io.javalin.Javalin;
 import io.javalin.http.HttpStatus;
-
-import java.util.function.BiFunction;
 
 /**
  * This class implement the WoDT Web server that host the WoDT Digital Twin Interface component
 * of the Abstract Architecture.
 */
-final class WoDTWebServerImpl implements WoDTWebServer {
+public class WoDTWebServerImpl implements WoDTWebServer {
     private final int portNumber;
     private final WoDTDigitalTwinInterfaceControllerImpl wodtDigitalTwinInterfaceController;
     private final PlatformManagementInterfaceAPIControllerImpl platformManagementInterfaceAPIController;
@@ -45,7 +47,7 @@ final class WoDTWebServerImpl implements WoDTWebServer {
     * @param actionHandler handler of action invocation
     * @param platformManagementInterfaceNotifier the Platform Management Interface Notifier component
     */
-    WoDTWebServerImpl(
+    public WoDTWebServerImpl(
             final int portNumber,
             final DTKGEngine dtkgEngine,
             final DTDManagerReader dtdManager,

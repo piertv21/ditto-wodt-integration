@@ -16,34 +16,24 @@ package org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl;
  * limitations under the License.
  */
 
-import org.eclipse.ditto.wodt.DTDManager.api.DTDManager;
-import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
-import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterface;
-import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.api.WoDTWebServer;
-
-import it.wldt.adapter.digital.DigitalAdapter;
-import it.wldt.core.state.DigitalTwinState;
-import it.wldt.core.state.DigitalTwinStateChange;
-import it.wldt.core.state.DigitalTwinStateEventNotification;
-import it.wldt.core.state.DigitalTwinStateAction;
-import it.wldt.core.state.DigitalTwinStateProperty;
-import it.wldt.core.state.DigitalTwinStateRelationship;
-import it.wldt.core.state.DigitalTwinStateRelationshipInstance;
-import it.wldt.core.state.DigitalTwinStateResource;
-import it.wldt.exception.EventBusException;
-import it.wldt.exception.WldtDigitalTwinStateActionException;
-import it.wldt.exception.WldtDigitalTwinStatePropertyException;
-
-import java.util.ArrayList;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.eclipse.ditto.wodt.DTDManager.api.DTDManager;
+import org.eclipse.ditto.wodt.DTDManager.impl.WoTDTDManager;
+import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
+import org.eclipse.ditto.wodt.DTKGEngine.impl.JenaDTKGEngine;
+import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterface;
+import org.eclipse.ditto.wodt.PlatformManagementInterface.impl.BasePlatformManagementInterface;
+import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.api.WoDTWebServer;
+import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.impl.WoDTWebServerImpl;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.api.WoDTDigitalAdapterConfiguration;
 
 /**
  * This class represents the Eclipse Ditto Adapter that allows to implement the WoDT Digital Twin layer
 * implementing the components of the Abstract Architecture.
 */
-public final class WoDTDigitalAdapter extends DigitalAdapter<WoDTDigitalAdapterConfiguration> {
+public final class WoDTDigitalAdapter {
     private final DTKGEngine dtkgEngine;
     private final DTDManager dtdManager;
     private final WoDTWebServer woDTWebServer;
@@ -58,36 +48,36 @@ public final class WoDTDigitalAdapter extends DigitalAdapter<WoDTDigitalAdapterC
         final String digitalAdapterId,
         final WoDTDigitalAdapterConfiguration configuration
     ) {
-        super(digitalAdapterId, configuration);
         this.platformManagementInterface = new BasePlatformManagementInterface(
-                this.getConfiguration().getDigitalTwinUri());
-        this.dtkgEngine = new JenaDTKGEngine(this.getConfiguration().getDigitalTwinUri());
+                configuration.getDigitalTwinUri());
+        this.dtkgEngine = new JenaDTKGEngine(configuration.getDigitalTwinUri());
         this.dtdManager = new WoTDTDManager(
-                this.getConfiguration().getDigitalTwinUri(),
-                this.getConfiguration().getOntology(),
-                this.getConfiguration().getPhysicalAssetId(),
-                this.getConfiguration().getPortNumber(),
+                configuration.getDigitalTwinUri(),
+                configuration.getOntology(),
+                configuration.getPhysicalAssetId(),
+                configuration.getPortNumber(),
                 this.platformManagementInterface
         );
         this.woDTWebServer = new WoDTWebServerImpl(
-                this.getConfiguration().getPortNumber(),
+                configuration.getPortNumber(),
                 this.dtkgEngine,
                 this.dtdManager,
                 (actionName, body) -> {
                     try {
-                        publishDigitalActionWldtEvent(actionName, body); // TO DO: cambia qui
+                        //publishDigitalActionWldtEvent(actionName, body); // TO DO: cambia qui, inviare msg in base all'actionName e body
                         return true;
-                    } catch (EventBusException e) {
+                    } catch (Exception e) {
                         Logger.getLogger(WoDTDigitalAdapter.class.getName())
-                                .info("Impossible to forward action: " + e);
+                                .log(Level.INFO, "Impossible to forward action: {0}", e);
                         return false;
                     }
                 },
                 this.platformManagementInterface
         );
+        this.woDTWebServer.start();
     }
 
-    @Override
+    /*@Override
     protected void onEventNotificationReceived(
             final DigitalTwinStateEventNotification<?> digitalTwinStateEventNotification) { }
 
@@ -146,7 +136,7 @@ public final class WoDTDigitalAdapter extends DigitalAdapter<WoDTDigitalAdapterC
                 this.dtdManager.addProperty(updatedProperty.getKey());
                 break;
             case OPERATION_REMOVE:
-                this.getConfiguration()
+                configuration
                     .getOntology()
                     .obtainProperty(updatedProperty.getKey())
                     .ifPresent(this.dtkgEngine::removeProperty);
@@ -154,7 +144,7 @@ public final class WoDTDigitalAdapter extends DigitalAdapter<WoDTDigitalAdapterC
                 break;
             case OPERATION_UPDATE:
             case OPERATION_UPDATE_VALUE:
-                this.getConfiguration().getOntology().convertPropertyValue(
+                configuration.getOntology().convertPropertyValue(
                     updatedProperty.getKey(),
                     updatedProperty.getValue()
                 ).ifPresent(triple ->
@@ -188,7 +178,7 @@ public final class WoDTDigitalAdapter extends DigitalAdapter<WoDTDigitalAdapterC
     ) {
         switch (operationPerformed) {
             case OPERATION_ADD:
-                this.getConfiguration().getOntology().convertRelationship(
+                configuration.getOntology().convertRelationship(
                     updatedRelationshipInstance.getRelationshipName(),
                     updatedRelationshipInstance.getTargetId().toString()
                 ).ifPresent(triple ->
@@ -196,7 +186,7 @@ public final class WoDTDigitalAdapter extends DigitalAdapter<WoDTDigitalAdapterC
                 );
                 break;
             case OPERATION_REMOVE:
-                this.getConfiguration().getOntology().convertRelationship(
+                configuration.getOntology().convertRelationship(
                     updatedRelationshipInstance.getRelationshipName(),
                     updatedRelationshipInstance.getTargetId().toString()
                 ).ifPresent(triple ->
@@ -231,7 +221,7 @@ public final class WoDTDigitalAdapter extends DigitalAdapter<WoDTDigitalAdapterC
     @Override
     public void onAdapterStart() {
         this.woDTWebServer.start();
-        this.getConfiguration().getPlatformToRegister().forEach(platform ->
+        configuration.getPlatformToRegister().forEach(platform ->
                 this.platformManagementInterface.registerToPlatform(platform, this.dtdManager.getDTD().toJson()));
     }
 
@@ -245,7 +235,7 @@ public final class WoDTDigitalAdapter extends DigitalAdapter<WoDTDigitalAdapterC
         try {
             digitalTwinState.getPropertyList().ifPresent(properties ->
                     properties.forEach(property -> {
-                        this.getConfiguration().getOntology().convertPropertyValue(
+                        configuration.getOntology().convertPropertyValue(
                                 property.getKey(),
                                 property.getValue()
                         ).ifPresent(triple ->
@@ -278,5 +268,5 @@ public final class WoDTDigitalAdapter extends DigitalAdapter<WoDTDigitalAdapterC
     public void onDigitalTwinStop() { }
 
     @Override
-    public void onDigitalTwinDestroy() { }
+    public void onDigitalTwinDestroy() { }*/
 }

@@ -45,7 +45,7 @@ import io.github.sanecity.wot.thing.property.ThingProperty;
  * This class provide an implementation of the {@link io.github.webbasedwodt.application.component.DTDManager} using
 * a WoT Thing Description to implement the Digital Twin Descriptor.
 */
-final class WoTDTDManager implements DTDManager {
+public class WoTDTDManager implements DTDManager {
     private static final String THING_DESCRIPTION_CONTEXT = "https://www.w3.org/2019/wot/td/v1";
     private static final String VERSION = "1.0.0";
     private static final String SNAPSHOT_DTD_PROPERTY = "snapshot";
@@ -67,7 +67,7 @@ final class WoTDTDManager implements DTDManager {
     * @param portNumber the port number where to offer the affordances
     * @param platformManagementInterfaceReader the platform management interface reader reference
     */
-    WoTDTDManager(final String digitalTwinUri,
+    public WoTDTDManager(final String digitalTwinUri,
                 final DTOntology ontology,
                 final String physicalAssetId,
                 final int portNumber,

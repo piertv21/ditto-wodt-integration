@@ -41,7 +41,7 @@ import org.eclipse.ditto.wodt.model.ontology.WoDTVocabulary;
  * This class provides an implementation of the {@link io.github.webbasedwodt.application.component.DTKGEngine} using
 * Apache Jena.
 */
-final class JenaDTKGEngine implements DTKGEngine {
+public class JenaDTKGEngine implements DTKGEngine {
     private final Model dtkgModel;
     private final Resource digitalTwinResource;
     private final List<DTKGObserver> observers;
@@ -50,7 +50,7 @@ final class JenaDTKGEngine implements DTKGEngine {
      * Default constructor.
     * @param digitalTwinUri the uri of the Digital Twin for which this class creates the DTKG
     */
-    JenaDTKGEngine(final String digitalTwinUri) {
+    public JenaDTKGEngine(final String digitalTwinUri) {
         this.dtkgModel = ModelFactory.createDefaultModel();
         this.digitalTwinResource = this.dtkgModel.createResource(digitalTwinUri);
         this.observers = new ArrayList<>();

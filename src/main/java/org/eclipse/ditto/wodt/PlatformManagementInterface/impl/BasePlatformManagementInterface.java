@@ -31,7 +31,7 @@ import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagement
 /**
  * Base implementation of the {@link PlatformManagementInterface}.
 */
-final class BasePlatformManagementInterface implements PlatformManagementInterface {
+public class BasePlatformManagementInterface implements PlatformManagementInterface {
     private static final String PATH_TO_PLATFORM_WODT = "/wodt";
     private static final int ACCEPTED_REQUEST_STATUS_CODE = 202;
     private final String digitalTwinUri;
@@ -41,7 +41,7 @@ final class BasePlatformManagementInterface implements PlatformManagementInterfa
      * Default constructor.
     * @param digitalTwinUri the uri of the WoDT Digital Twin
     */
-    BasePlatformManagementInterface(final String digitalTwinUri) {
+    public BasePlatformManagementInterface(final String digitalTwinUri) {
         this.digitalTwinUri = digitalTwinUri;
         this.platforms = Collections.synchronizedSet(new HashSet<>());
     }

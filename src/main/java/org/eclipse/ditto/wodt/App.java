@@ -103,7 +103,12 @@ public class App extends DittoBase {
         httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
             .thenApply(HttpResponse::body)
             .thenAccept(System.out::println)
-            .join();  // Attende il completamento della richiesta*/
+            .join();  // Attende il completamento della richiesta
+            
+        //getThingModelUrls(thing).forEach(System.out::println);
+        extractPropertiesActionsEvents(thing).get(2).forEach(System.out::println);
+            
+        */
     }
 
     private void destroy() {
