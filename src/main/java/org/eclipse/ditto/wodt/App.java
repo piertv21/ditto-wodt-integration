@@ -1,12 +1,11 @@
 package org.eclipse.ditto.wodt;
 
-import java.net.URI;
-import java.util.Set;
-
-import org.eclipse.ditto.wodt.DTDManager.impl.BulbHolderDTOntology;
+import org.eclipse.ditto.things.model.Thing;
+import org.eclipse.ditto.things.model.ThingId;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.api.WoDTDigitalAdapterConfiguration;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl.WoDTDigitalAdapter;
 import org.eclipse.ditto.wodt.common.DittoBase;
+import static org.eclipse.ditto.wodt.common.ThingUtils.extractPropertiesActionsEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,31 +19,70 @@ public final class App extends DittoBase {
     private WoDTDigitalAdapterConfiguration configuration;
     private WoDTDigitalAdapter digitalAdapter;
 
-    private static final int DITTO_PORT_NUMBER = 3000;
+    private static final int MODULE_PORT_NUMBER = 3000;
+    private static final String DITTO_THING_ID = "io.eclipseprojects.ditto:floor-lamp-0815";
+    private Thing thing;
 
     private App() {
         super();
-        prova();
+        init();
         terminate();
     }    
 
-    public void prova() {
+    public void init() {
+        this.thing = client.twin().forId(ThingId.of(DITTO_THING_ID))
+            .retrieve().toCompletableFuture().join();
+
+        /*System.out.println(
+            this.thing.getFeatures().get().getFeature("Spot1")
+            .get().getProperties().get().getField("color").get().getValue().toString()
+        );*/
+
+        extractPropertiesActionsEvents(this.thing)
+            .get(2).forEach(
+                (element) -> System.out.println("[" + element.name + ", " + element.feature + ", " + element.isComplex + "]")
+            );
+
+        // valutare threadizzazione
+
+        /*syncThing(this.thing);
+
+        client.twin().forId(ThingId.of(DITTO_THING_ID)).registerForThingChanges("my-changes", change -> {
+            System.out.println("Change received: " + change);
+        });
+
+        System.out.println("sdf");
+        startConsumeChanges(client);
+
         this.configuration = new WoDTDigitalAdapterConfiguration(
-            "http://localhost:" + DITTO_PORT_NUMBER,
+            "http://localhost:" + MODULE_PORT_NUMBER,
             new BulbHolderDTOntology(),
-            DITTO_PORT_NUMBER,
+            MODULE_PORT_NUMBER,
             "bulbHolderPA",
-            Set.of(URI.create("http://localhost:8979/api/1/things/bulbHolderPA"))
+            Set.of(URI.create("http://localhost:5000/"))
         );
         
         this.digitalAdapter = new WoDTDigitalAdapter(
             "wodt-dt-adapter",
             this.configuration
-        );
+        );*/
     }
 
     public static void main(String[] args) {
         new App();
+    }
+
+    private void syncThing(Thing thing) {
+        // Stampa la definizione della Thing
+        LOGGER.info("Thing definition: {}", thing.getDefinition().get().toString());
+
+        // Itera su tutte le features e stampa la loro definizione
+        thing.getFeatures().ifPresent(features -> {
+            features.forEach((feature) -> {
+                LOGGER.info("Feature: {}", feature.getId());
+                LOGGER.info("Feature definition: {}", feature.getDefinition().get().getFirstIdentifier());
+            });
+        });        
     }
 
 
@@ -79,9 +117,9 @@ public final class App extends DittoBase {
         });
 
         thing.getFeatures().ifPresent(features -> {
-            features.forEach((feature) -> {
-                System.out.println("Feature: " + feature.getId());
-                feature.getProperties().ifPresent(properties -> {
+            features.forEach((featureName) -> {
+                System.out.println("Feature: " + featureName.getId());
+                featureName.getProperties().ifPresent(properties -> {
                     properties.forEach((property) -> {
                         System.out.println(property.getKey() + ": " + property.getValue().toString());
                     });
@@ -96,8 +134,8 @@ public final class App extends DittoBase {
 
         // Itera su tutte le features e stampa la loro definizione
         thing.getFeatures().ifPresent(features -> {
-            features.forEach((feature) -> {
-                System.out.println(feature.getId() + ": " + feature.getDefinition().get().getFirstIdentifier() + "\n");                
+            features.forEach((featureName) -> {
+                System.out.println(featureName.getId() + ": " + featureName.getDefinition().get().getFirstIdentifier() + "\n");                
             });
         });
 
@@ -110,7 +148,7 @@ public final class App extends DittoBase {
             // get attributo
             //thing.getAttributes().get().getField("manufacturer").get().getValue().asString()
 
-            // get proprietà feature
+            // get proprietà featureName
             //thing.getFeatures().get().getFeature("Bulb").get().getProperties().get().getField("on").get().getValue().toString()
 
             // get intera thing

@@ -6,9 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.ditto.things.model.Thing;
 import org.slf4j.Logger;
@@ -26,43 +24,43 @@ public class ThingUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(ThingUtils.class);
     private static final HttpClient httpClient = HttpClient.newHttpClient();
 
-    /*
-     * Extract properties, actions, and events from a Thing and its submodels.
-     * Output: List of Sets. [0] = properties, [1] = actions, [2] = events
+    /**
+     * Estrae proprietà, azioni ed eventi da una Thing e dai suoi submodels.
+     * Output: Lista di liste. [0] = properties, [1] = actions, [2] = events.
      */
-    public static List<Set<Pair<String, String>>> extractPropertiesActionsEvents(Thing thing) {
-        Set<Pair<String, String>> propertiesSet = new HashSet<>();
-        Set<Pair<String, String>> actionsSet = new HashSet<>();
-        Set<Pair<String, String>> eventsSet = new HashSet<>();
+    public static List<List<ThingModelElement>> extractPropertiesActionsEvents(Thing thing) {
+        List<ThingModelElement> propertiesList = new ArrayList<>();
+        List<ThingModelElement> actionsList = new ArrayList<>();
+        List<ThingModelElement> eventsList = new ArrayList<>();
 
-        // Current Thing properties, actions, and events
-        extractPropertiesActionsEventsFromModel(thing.getDefinition().get().toString(), "", propertiesSet, actionsSet, eventsSet);
+        // Proprietà, azioni ed eventi della Thing corrente
+        extractPropertiesActionsEventsFromModel(thing.getDefinition().get().toString(), "", propertiesList, actionsList, eventsList);
 
-        // Submodels from Thing's features
+        // Submodels dalle feature della Thing
         thing.getFeatures().ifPresent(features -> {
             features.forEach((feature) -> {
-                String subThingName = feature.getId();
+                String featureName = feature.getId();
                 feature.getDefinition().ifPresent(def -> {
-                    extractPropertiesActionsEventsFromModel(def.getFirstIdentifier().toString(), subThingName, propertiesSet, actionsSet, eventsSet);
+                    extractPropertiesActionsEventsFromModel(def.getFirstIdentifier().toString(), featureName, propertiesList, actionsList, eventsList);
                 });
             });
         });
-        
-        List<Set<Pair<String, String>>> result = new ArrayList<>();
-        result.add(propertiesSet);
-        result.add(actionsSet);
-        result.add(eventsSet);
+
+        List<List<ThingModelElement>> result = new ArrayList<>();
+        result.add(propertiesList);
+        result.add(actionsList);
+        result.add(eventsList);
         return result;
     }
 
-    /*
-     * Extract properties, actions, and events from a Thing Model
+    /**
+     * Estrae proprietà, azioni ed eventi da un Thing Model.
      */
     private static void extractPropertiesActionsEventsFromModel(
-        String url, String subThingName,
-        Set<Pair<String, String>> propertiesSet,
-        Set<Pair<String, String>> actionsSet,
-        Set<Pair<String, String>> eventsSet
+            String url, String featureName,
+            List<ThingModelElement> propertiesList,
+            List<ThingModelElement> actionsList,
+            List<ThingModelElement> eventsList
     ) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -71,27 +69,45 @@ public class ThingUtils {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             JsonObject jsonObject = JsonParser.parseString(response.body()).getAsJsonObject();
 
-            // Properties
+            // Proprietà
             if (jsonObject.has("properties")) {
                 JsonObject properties = jsonObject.getAsJsonObject("properties");
                 for (String propertyKey : properties.keySet()) {
-                    propertiesSet.add(new Pair<>(propertyKey, subThingName));
+                    JsonObject property = properties.getAsJsonObject(propertyKey);
+                    boolean isComplex = "object".equals(property.get("type").getAsString());
+                    addModelElement(propertiesList, new ThingModelElement(propertyKey, featureName, isComplex));
                 }
             }
 
-            // Actions
+            // Azioni
             if (jsonObject.has("actions")) {
                 JsonObject actions = jsonObject.getAsJsonObject("actions");
                 for (String actionKey : actions.keySet()) {
-                    actionsSet.add(new Pair<>(actionKey, subThingName));
+                    addModelElement(actionsList, new ThingModelElement(actionKey, featureName, false));
                 }
             }
 
-            // Events
+            // Eventi
             if (jsonObject.has("events")) {
                 JsonObject events = jsonObject.getAsJsonObject("events");
                 for (String eventKey : events.keySet()) {
-                    eventsSet.add(new Pair<>(eventKey, subThingName));
+                    JsonObject event = events.getAsJsonObject(eventKey);
+                    boolean isComplex = event.has("data") && "object".equals(event.getAsJsonObject("data").get("type").getAsString());
+                    addModelElement(eventsList, new ThingModelElement(eventKey, featureName, isComplex));
+
+                    // Gestione del payload dell'evento se complesso
+                    if (isComplex && event.has("data")) {
+                        JsonObject data = event.getAsJsonObject("data");
+                        if (data.has("properties")) {
+                            JsonObject dataProperties = data.getAsJsonObject("properties");
+                            for (String dataPropertyKey : dataProperties.keySet()) {
+                                JsonObject dataProperty = dataProperties.getAsJsonObject(dataPropertyKey);
+                                boolean dataIsComplex = "object".equals(dataProperty.get("type").getAsString());
+                                String dataFullName = dataPropertyKey + " " + featureName;
+                                addModelElement(eventsList, new ThingModelElement(dataFullName, featureName, dataIsComplex));
+                            }
+                        }
+                    }
                 }
             }
 
@@ -100,10 +116,16 @@ public class ThingUtils {
                 JsonArray links = jsonObject.getAsJsonArray("links");
                 for (int i = 0; i < links.size(); i++) {
                     JsonObject link = links.get(i).getAsJsonObject();
-                    if (link.has("rel") && "tm:submodel".equals(link.get("rel").getAsString())) {
-                        String href = link.get("href").getAsString();
-                        String instanceName = link.has("instanceName") ? link.get("instanceName").getAsString() : "";
-                        extractPropertiesActionsEventsFromModel(href, instanceName, propertiesSet, actionsSet, eventsSet);
+                    if (link.has("rel")) {
+                        String rel = link.get("rel").getAsString();
+                        if ("tm:submodel".equals(rel)) {
+                            String href = link.get("href").getAsString();
+                            String instanceName = link.has("instanceName") ? link.get("instanceName").getAsString() : "";
+                            extractPropertiesActionsEventsFromModel(href, instanceName, propertiesList, actionsList, eventsList);
+                        } else if ("tm:extends".equals(rel)) {
+                            String href = link.get("href").getAsString();
+                            extractPropertiesActionsEventsFromModel(href, featureName, propertiesList, actionsList, eventsList);
+                        }
                     }
                 }
             }
@@ -113,67 +135,13 @@ public class ThingUtils {
         }
     }
 
-    /*
-     * Get all Thing Model URLs from a Thing and its submodels
+    /**
+     * Add a model element to the list if it is not already present, so that duplicates are avoided
+     * and the order is preserved.
      */
-    public static Set<String> getThingModelUrls(Thing thing) { // TO DO: actually only 1° and 2° level thing definitions are retrieved
-        Set<String> urlSet = new HashSet<>();
-
-        // Current Thing definition
-        urlSet.add(thing.getDefinition().get().toString());
-
-        // Thing features definition
-        thing.getFeatures().ifPresent(features -> {
-            features.forEach((feature) -> {
-                feature.getDefinition().ifPresent(def -> urlSet.add(def.getFirstIdentifier().toString()));
-            });
-        });
-        
-        // Every feature definition
-        /*Set<String> expandedUrls = new HashSet<>(urlSet);
-        for (String url : urlSet) {
-            expandThingModelUrls(url, expandedUrls);
-        }*/
-
-        return urlSet;
-    }
-
-    /*
-     * Expand Thing Model URLs recursively
-     */
-    private static void expandThingModelUrls(String url, Set<String> urlSet) {
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .build();    
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            urlSet.add(url);            
-            JsonObject jsonObject = JsonParser.parseString(response.body()).getAsJsonObject();
-            
-            if (jsonObject.has("links")) {
-                JsonArray links = jsonObject.getAsJsonArray("links");
-                for (int i = 0; i < links.size(); i++) {
-                    JsonObject link = links.get(i).getAsJsonObject();
-                    if (link.has("rel") && "tm:submodel".equals(link.get("rel").getAsString())) {
-                        String href = link.get("href").getAsString();
-                        urlSet.add(href);
-                        expandThingModelUrls(href, urlSet);
-                    }
-                }
-            }
-
-            if (jsonObject.has("actions")) {
-                JsonObject actions = jsonObject.getAsJsonObject("actions");
-                for (String actionKey : actions.keySet()) {
-                    JsonObject action = actions.getAsJsonObject(actionKey);
-                    if (action.has("tm:ref")) {
-                        String refUrl = action.get("tm:ref").getAsString();
-                        expandThingModelUrls(refUrl, urlSet);
-                    }
-                }
-            }    
-        } catch (IOException | InterruptedException e) {
-            LOGGER.error("Errore durante il download o parsing del Thing Model: {}", url, e);
+    private static void addModelElement(List<ThingModelElement> list, ThingModelElement element) {
+        if (!list.contains(element)) {
+            list.add(element);
         }
     }
 }

@@ -49,10 +49,11 @@ public abstract class DittoBase {
     private static final ConfigProperties CONFIG_PROPERTIES = ConfigProperties.getInstance();
     protected final DittoClient client;
     protected AuthorizationSubject authorizationSubject;
+    private static final int TIMEOUT = 100;
 
     protected DittoBase() {
         try {
-            client = buildClient().connect().toCompletableFuture().get(10, TimeUnit.SECONDS); // TO DO: cambia
+            client = buildClient().connect().toCompletableFuture().get(TIMEOUT, TimeUnit.SECONDS); // TO DO: cambia
         } catch (final InterruptedException | ExecutionException | TimeoutException e) {
             throw new RuntimeException(e);
         }
@@ -60,7 +61,7 @@ public abstract class DittoBase {
 
     protected void startConsumeChanges(final DittoClient client) {
         try {
-            client.twin().startConsumption().toCompletableFuture().get(10, TimeUnit.SECONDS);
+            client.twin().startConsumption().toCompletableFuture().get(TIMEOUT, TimeUnit.SECONDS);
         } catch (final InterruptedException | ExecutionException | TimeoutException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Error subscribing to change events.", e);
