@@ -1,14 +1,16 @@
 package org.eclipse.ditto.wodt.common;
 
+import java.util.Optional;
+
 /*
  * Class representing a Thing Model element (property, action or event)
  */
 public class ThingModelElement {
     public final String name;
-    public final String feature;
+    public final Optional<String> feature;
     public final boolean isComplex;
 
-    public ThingModelElement(String name, String feature, boolean isComplex) {
+    public ThingModelElement(String name, Optional<String> feature, boolean isComplex) {
         this.name = name;
         this.feature = feature;
         this.isComplex = isComplex;

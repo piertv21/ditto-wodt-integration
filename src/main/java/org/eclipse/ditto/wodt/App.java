@@ -1,11 +1,14 @@
 package org.eclipse.ditto.wodt;
 
+import java.util.List;
+
 import org.eclipse.ditto.things.model.Thing;
 import org.eclipse.ditto.things.model.ThingId;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.api.WoDTDigitalAdapterConfiguration;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl.WoDTDigitalAdapter;
 import org.eclipse.ditto.wodt.common.DittoBase;
-import static org.eclipse.ditto.wodt.common.ThingUtils.extractPropertiesActionsEvents;
+import org.eclipse.ditto.wodt.common.ThingModelElement;
+import static org.eclipse.ditto.wodt.common.ThingUtils.extractPropertiesActionsEventsFromThing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +41,14 @@ public final class App extends DittoBase {
             .get().getProperties().get().getField("color").get().getValue().toString()
         );*/
 
-        extractPropertiesActionsEvents(this.thing)
-            .get(2).forEach(
-                (element) -> System.out.println("[" + element.name + ", " + element.feature + ", " + element.isComplex + "]")
-            );
+        List<List<ThingModelElement>> res = extractPropertiesActionsEventsFromThing(this.thing);
+
+        System.out.println("Properties:");
+        res.get(0).forEach(System.out::println);
+        System.out.println("\nActions:");
+        res.get(1).forEach(System.out::println);
+        System.out.println("\nEvents:");
+        res.get(2).forEach(System.out::println);
 
         // valutare threadizzazione
 
