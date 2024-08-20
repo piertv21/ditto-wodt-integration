@@ -23,7 +23,7 @@ public final class App extends DittoBase {
     private WoDTDigitalAdapter digitalAdapter;
 
     private static final int MODULE_PORT_NUMBER = 3000;
-    private static final String DITTO_THING_ID = "io.eclipseprojects.ditto:floor-lamp-0815";
+    private static final String DITTO_THING_ID = "io.eclipseprojects.ditto:bulb-holder";
     private Thing thing;
 
     private App() {
@@ -43,12 +43,14 @@ public final class App extends DittoBase {
 
         List<List<ThingModelElement>> res = extractPropertiesActionsEventsFromThing(this.thing);
 
-        System.out.println("Properties:");
+        System.out.println("Context extensions:");
         res.get(0).forEach(System.out::println);
-        System.out.println("\nActions:");
+        System.out.println("\nProperties:");
         res.get(1).forEach(System.out::println);
-        System.out.println("\nEvents:");
+        System.out.println("\nActions:");
         res.get(2).forEach(System.out::println);
+        System.out.println("\nEvents:");
+        res.get(3).forEach(System.out::println);
 
         // valutare threadizzazione
 

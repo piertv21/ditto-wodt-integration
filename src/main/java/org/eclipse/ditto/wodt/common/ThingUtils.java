@@ -7,6 +7,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.ditto.things.model.Thing;
@@ -14,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -26,28 +28,42 @@ public class ThingUtils {
     private static final HttpClient httpClient = HttpClient.newHttpClient();
 
     /**
-     * Extract properties, actions and events from a Thing.
-     * Output: List of lists. [0] = properties, [1] = actions, [2] = events.
+     * Extract some information from a Thing model.
+     * Output: List of lists.
+     * [0] = Context extensions,
+     * [1] = Properties,
+     * [2] = Actions,
+     * [3] = Events.
      */
     public static List<List<ThingModelElement>> extractPropertiesActionsEventsFromThing(Thing thing) {
+        List<ThingModelElement> contextExtensionsList = new ArrayList<>();
         List<ThingModelElement> propertiesList = new ArrayList<>();
         List<ThingModelElement> actionsList = new ArrayList<>();
         List<ThingModelElement> eventsList = new ArrayList<>();
 
         // Current Thing
-        extractPropertiesActionsEventsFromCurrentModel(thing.getDefinition().get().toString(), "", propertiesList, actionsList, eventsList);
+        extractPropertiesActionsEventsFromCurrentModel(
+            thing.getDefinition().get().toString(), "",
+            contextExtensionsList, propertiesList,
+            actionsList, eventsList
+        );
 
         // Submodels
         thing.getFeatures().ifPresent(features -> {
             features.forEach((feature) -> {
                 String featureName = feature.getId();
                 feature.getDefinition().ifPresent(def -> {
-                    extractPropertiesActionsEventsFromCurrentModel(def.getFirstIdentifier().toString(), featureName, propertiesList, actionsList, eventsList);
+                    extractPropertiesActionsEventsFromCurrentModel(
+                        def.getFirstIdentifier().toString(), featureName,
+                        contextExtensionsList, propertiesList,
+                        actionsList, eventsList
+                    );
                 });
             });
         });
 
         List<List<ThingModelElement>> result = new ArrayList<>();
+        result.add(contextExtensionsList);
         result.add(propertiesList);
         result.add(actionsList);
         result.add(eventsList);
@@ -55,11 +71,12 @@ public class ThingUtils {
     }
 
     /**
-     * Extract properties, actions and events from a Thing Model.
+     * Extract some information from a Thing model.
      */
     private static void extractPropertiesActionsEventsFromCurrentModel(
             String url,
             String featureName,
+            List<ThingModelElement> contextExtensionsList,
             List<ThingModelElement> propertiesList,
             List<ThingModelElement> actionsList,
             List<ThingModelElement> eventsList
@@ -70,6 +87,23 @@ public class ThingUtils {
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             JsonObject jsonObject = JsonParser.parseString(response.body()).getAsJsonObject();
+
+            // Context extensions
+            if (jsonObject.has("@context")) {
+                JsonArray contextArray = jsonObject.getAsJsonArray("@context");
+                for (JsonElement contextElement : contextArray) {
+                    if (contextElement.isJsonObject()) {
+                        JsonObject contextObj = contextElement.getAsJsonObject();
+                        for (Map.Entry<String, JsonElement> entry : contextObj.entrySet()) {
+                            String alias = entry.getKey();
+                            String contextUrl = entry.getValue().getAsString();
+                            contextUrl = contextUrl.endsWith("#") ? contextUrl.substring(0, contextUrl.length() - 1) : contextUrl;
+                            contextUrl = !contextUrl.endsWith("/") ? contextUrl + "/" : contextUrl;
+                            addModelElement(contextExtensionsList, new ThingModelElement(alias, Optional.of(contextUrl), false));
+                        }
+                    }
+                }
+            }
 
             // Properties
             if (jsonObject.has("properties")) {
@@ -97,7 +131,7 @@ public class ThingUtils {
                     boolean isComplex = event.has("data") && "object".equals(event.getAsJsonObject("data").get("type").getAsString());
                     addModelElement(eventsList, new ThingModelElement(eventKey, Optional.of(featureName), isComplex));
 
-                    // Gestione del payload dell'evento se complesso
+                    // Payload for complex events
                     if (isComplex && event.has("data")) {
                         JsonObject data = event.getAsJsonObject("data");
                         if (data.has("properties")) {
@@ -123,10 +157,10 @@ public class ThingUtils {
                         if ("tm:submodel".equals(rel)) {
                             String href = link.get("href").getAsString();
                             String instanceName = link.has("instanceName") ? link.get("instanceName").getAsString() : "";
-                            extractPropertiesActionsEventsFromCurrentModel(href, instanceName, propertiesList, actionsList, eventsList);
+                            extractPropertiesActionsEventsFromCurrentModel(href, instanceName, contextExtensionsList, propertiesList, actionsList, eventsList);
                         } else if ("tm:extends".equals(rel)) {
                             String href = link.get("href").getAsString();
-                            extractPropertiesActionsEventsFromCurrentModel(href, featureName, propertiesList, actionsList, eventsList);
+                            extractPropertiesActionsEventsFromCurrentModel(href, featureName, contextExtensionsList, propertiesList, actionsList, eventsList);
                         }
                     }
                 }
@@ -138,8 +172,8 @@ public class ThingUtils {
     }
 
     /**
-     * Add a model element to the list if it is not already present, so that duplicates are avoided
-     * and the order is preserved.
+     * Add a model element to the list if it is not already present,
+     * so that duplicates are avoided but the order is preserved.
      */
     private static void addModelElement(List<ThingModelElement> list, ThingModelElement element) {
         if (!list.contains(element)) {

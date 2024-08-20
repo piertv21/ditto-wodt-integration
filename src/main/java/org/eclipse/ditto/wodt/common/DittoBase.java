@@ -100,7 +100,7 @@ public abstract class DittoBase {
                     ClientCredentialsAuthenticationConfiguration.newBuilder()
                             .clientId(CONFIG_PROPERTIES.getClientIdOrThrow())
                             .clientSecret(CONFIG_PROPERTIES.getClientSecretOrThrow())
-                            .scopes(CONFIG_PROPERTIES.getScopes())
+                            //.scopes(CONFIG_PROPERTIES.getScopes())
                             .tokenEndpoint(CONFIG_PROPERTIES.getTokenEndpointOrThrow());
             final Optional<ProxyConfiguration> proxyConfiguration = proxyConfiguration();
             proxyConfiguration.ifPresent(clientCredentialsAuthenticationConfigurationBuilder::proxyConfiguration);

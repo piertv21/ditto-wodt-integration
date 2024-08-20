@@ -41,7 +41,7 @@ public final class ConfigProperties {
 
     private final String clientId;
     private final String clientSecret;
-    private final List<String> scopes;
+    //private final List<String> scopes;
     private final String tokenEndpoint;
 
     private final String proxyHost;
@@ -55,7 +55,7 @@ public final class ConfigProperties {
             final String password,
             final String clientId,
             final String clientSecret,
-            final List<String> scopes,
+            //final List<String> scopes,
             final String tokenEndpoint,
             final String proxyHost,
             final String proxyPort,
@@ -67,7 +67,7 @@ public final class ConfigProperties {
         this.password = password;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
-        this.scopes = scopes;
+        //this.scopes = scopes;
         this.tokenEndpoint = tokenEndpoint;
         this.proxyHost = proxyHost;
         this.proxyPort = proxyPort;
@@ -86,7 +86,7 @@ public final class ConfigProperties {
             final String password = props.getProperty("password");
             final String clientId = props.getProperty("clientId");
             final String clientSecret = props.getProperty("clientSecret");
-            final List<String> scopes = getScopesAsList(props.getProperty("scopes"));
+            //final List<String> scopes = getScopesAsList(props.getProperty("scopes"));
             final String tokenEndpoint = props.getProperty("tokenEndpoint");
 
             final String proxyHost = props.getProperty("proxyHost");
@@ -94,7 +94,7 @@ public final class ConfigProperties {
             final String proxyPrincipal = props.getProperty("proxyPrincipal");
             final String proxyPassword = props.getProperty("proxyPassword");
 
-            instance = new ConfigProperties(namespace, endpoint, username, password, clientId, clientSecret, scopes,
+            instance = new ConfigProperties(namespace, endpoint, username, password, clientId, clientSecret,
                     tokenEndpoint, proxyHost, proxyPort, proxyPrincipal, proxyPassword);
         }
 
@@ -177,9 +177,9 @@ public final class ConfigProperties {
         return getClientSecret().orElseThrow(IllegalStateException::new);
     }
 
-    List<String> getScopes() {
+    /*List<String> getScopes() {
         return scopes;
-    }
+    }*/
 
     Optional<String> getTokenEndpoint() {
         return Optional.ofNullable(tokenEndpoint);
@@ -236,7 +236,7 @@ public final class ConfigProperties {
                 Objects.equals(password, that.password) &&
                 Objects.equals(clientId, that.clientId) &&
                 Objects.equals(clientSecret, that.clientSecret) &&
-                Objects.equals(scopes, that.scopes) &&
+                //Objects.equals(scopes, that.scopes) &&
                 Objects.equals(tokenEndpoint, that.tokenEndpoint) &&
                 Objects.equals(proxyHost, that.proxyHost) &&
                 Objects.equals(proxyPort, that.proxyPort) &&
@@ -246,7 +246,7 @@ public final class ConfigProperties {
 
     @Override
     public int hashCode() {
-        return Objects.hash(namespace, endpoint, username, password, clientId, clientSecret, scopes, tokenEndpoint,
+        return Objects.hash(namespace, endpoint, username, password, clientId, clientSecret, tokenEndpoint,
                 proxyHost, proxyPort, proxyPrincipal, proxyPassword);
     }
 
@@ -259,7 +259,7 @@ public final class ConfigProperties {
                 ", password=" + password +
                 ", clientId=" + clientId +
                 ", clientSecret=" + clientSecret +
-                ", scopes=" + scopes +
+                //", scopes=" + scopes +
                 ", tokenEndpoint=" + tokenEndpoint +
                 ", proxyHost=" + proxyHost +
                 ", proxyPort=" + proxyPort +

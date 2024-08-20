@@ -3,16 +3,16 @@ package org.eclipse.ditto.wodt.common;
 import java.util.Optional;
 
 /*
- * Class representing a Thing Model element (property, action or event)
+ * Class representing a Thing Model element (context extension, property, action or event)
  */
 public class ThingModelElement {
-    public final String name;
-    public final Optional<String> feature;
+    public final String element;
+    public final Optional<String> value;
     public final boolean isComplex;
 
-    public ThingModelElement(String name, Optional<String> feature, boolean isComplex) {
-        this.name = name;
-        this.feature = feature;
+    public ThingModelElement(String element, Optional<String> value, boolean isComplex) {
+        this.element = element;
+        this.value = value;
         this.isComplex = isComplex;
     }
 
@@ -24,14 +24,14 @@ public class ThingModelElement {
         ThingModelElement that = (ThingModelElement) o;
 
         if (isComplex != that.isComplex) return false;
-        if (!name.equals(that.name)) return false;
-        return feature.equals(that.feature);
+        if (!element.equals(that.element)) return false;
+        return value.equals(that.value);
     }
 
     @Override
     public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + feature.hashCode();
+        int result = element.hashCode();
+        result = 31 * result + value.hashCode();
         result = 31 * result + (isComplex ? 1 : 0);
         return result;
     }
@@ -39,8 +39,8 @@ public class ThingModelElement {
     @Override
     public String toString() {
         return "ModelElement{" +
-                "name='" + name + '\'' +
-                ", feature='" + feature + '\'' +
+                "element='" + element + '\'' +
+                ", value='" + value + '\'' +
                 ", isComplex=" + isComplex +
                 '}';
     }
