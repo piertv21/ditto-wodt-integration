@@ -3,17 +3,17 @@ package org.eclipse.ditto.wodt.common;
 import java.util.Optional;
 
 /*
- * Class representing a Thing Model element (context extension, property, action or event)
+ * Class representing a Thing Model element.
  */
 public class ThingModelElement {
     public final String element;
     public final Optional<String> value;
-    public final boolean isComplex;
+    public final Optional<String> additionalData;
 
-    public ThingModelElement(String element, Optional<String> value, boolean isComplex) {
+    public ThingModelElement(String element, Optional<String> value, Optional<String> additionalData) {
         this.element = element;
-        this.value = value;
-        this.isComplex = isComplex;
+        this.value = (value.isPresent() && !value.get().isEmpty()) ? value : Optional.empty();
+        this.additionalData = (additionalData.isPresent() && !additionalData.get().isEmpty()) ? additionalData : Optional.empty();
     }
 
     @Override
@@ -22,26 +22,26 @@ public class ThingModelElement {
         if (o == null || getClass() != o.getClass()) return false;
 
         ThingModelElement that = (ThingModelElement) o;
-
-        if (isComplex != that.isComplex) return false;
+        
         if (!element.equals(that.element)) return false;
-        return value.equals(that.value);
+        if (!value.equals(that.value)) return false;
+        return additionalData.equals(that.additionalData);
     }
 
     @Override
     public int hashCode() {
         int result = element.hashCode();
         result = 31 * result + value.hashCode();
-        result = 31 * result + (isComplex ? 1 : 0);
+        result = 31 * result + additionalData.hashCode();
         return result;
     }
 
     @Override
     public String toString() {
-        return "ModelElement{" +
+        return "ThingModelElement{" +
                 "element='" + element + '\'' +
                 ", value='" + value + '\'' +
-                ", isComplex=" + isComplex +
+                ", additionalData=" + additionalData +
                 '}';
     }
 }
