@@ -47,13 +47,13 @@ import com.neovisionaries.ws.client.WebSocket;
 public abstract class DittoBase {
 
     private static final ConfigProperties CONFIG_PROPERTIES = ConfigProperties.getInstance();
+    private static final int TIMEOUT = 10;
     protected final DittoClient client;
     protected AuthorizationSubject authorizationSubject;
-    private static final int TIMEOUT = 100;
 
     protected DittoBase() {
         try {
-            client = buildClient().connect().toCompletableFuture().get(TIMEOUT, TimeUnit.SECONDS); // TO DO: cambia
+            client = buildClient().connect().toCompletableFuture().get(TIMEOUT, TimeUnit.SECONDS);
         } catch (final InterruptedException | ExecutionException | TimeoutException e) {
             throw new RuntimeException(e);
         }
@@ -119,7 +119,7 @@ public abstract class DittoBase {
      * Sets up a serializer/deserializer for the {@link org.eclipse.ditto.User.common.model.ExampleUser} model class
      * which uses Jackson in order to serialize and deserialize messages which should directly be mapped to this type.
      */
-    private MessageSerializerRegistry buildMessageSerializerRegistry() { // TO DO: rimuovi ?
+    private MessageSerializerRegistry buildMessageSerializerRegistry() {
         final ObjectMapper objectMapper = new ObjectMapper();
         final MessageSerializerRegistry messageSerializerRegistry =
                 MessageSerializerFactory.initializeDefaultSerializerRegistry();

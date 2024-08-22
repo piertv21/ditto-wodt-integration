@@ -1,14 +1,13 @@
 package org.eclipse.ditto.wodt;
 
-import java.util.List;
+import java.net.URI;
+import java.util.Set;
 
 import org.eclipse.ditto.things.model.Thing;
-import org.eclipse.ditto.things.model.ThingId;
+import org.eclipse.ditto.wodt.DTDManager.impl.BulbHolderDTOntology;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.api.WoDTDigitalAdapterConfiguration;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl.WoDTDigitalAdapter;
 import org.eclipse.ditto.wodt.common.DittoBase;
-import org.eclipse.ditto.wodt.common.ThingModelElement;
-import static org.eclipse.ditto.wodt.common.ThingUtils.extractDataFromThing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,8 +17,6 @@ import org.slf4j.LoggerFactory;
 public final class App extends DittoBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
-    
-    private WoDTDigitalAdapterConfiguration configuration;
     private WoDTDigitalAdapter digitalAdapter;
 
     private static final int MODULE_PORT_NUMBER = 3000;
@@ -33,53 +30,27 @@ public final class App extends DittoBase {
     }
 
     public void init() {
-        this.thing = client.twin()
-            .forId(ThingId.of(DITTO_THING_ID))
-            .retrieve()
-            .toCompletableFuture()
-            .join();
+        // Crea un'istanza del DittoClientThread
+        DittoClientThread dittoClientRunnable = new DittoClientThread(client);
+        Thread dittoClientThread = new Thread(dittoClientRunnable);
+        dittoClientThread.start();
 
-        List<List<ThingModelElement>> res = extractDataFromThing(this.thing);
-
-        System.out.println("Context extensions:");
-        res.get(0).forEach(System.out::println);
-        System.out.println("\nProperties:");
-        res.get(1).forEach(System.out::println);
-        System.out.println("\nActions:");
-        res.get(2).forEach(System.out::println);
-        System.out.println("\nEvents:");
-        res.get(3).forEach(System.out::println);
-
-        // valutare threadizzazione
-
-        /*syncThing(this.thing);
-
-        client.twin().forId(ThingId.of(DITTO_THING_ID)).registerForThingChanges("my-changes", change -> {
-            System.out.println("Change received: " + change);
-        });
-        
-        startConsumeChanges(client);
-
-        this.configuration = new WoDTDigitalAdapterConfiguration(
-            "http://localhost:" + MODULE_PORT_NUMBER,
-            new BulbHolderDTOntology(),
-            MODULE_PORT_NUMBER,
-            "bulbHolderPA",
-            Set.of(URI.create("http://localhost:5000/"))
-        );
-        
+        // Ora puoi avviare il server Javalin o fare altre operazioni dipendenti dal client Ditto
         this.digitalAdapter = new WoDTDigitalAdapter(
             "wodt-dt-adapter",
-            this.configuration
-        );*/
+            new WoDTDigitalAdapterConfiguration(
+                "http://localhost:" + MODULE_PORT_NUMBER,
+                new BulbHolderDTOntology(),
+                MODULE_PORT_NUMBER,
+                "bulbHolderPA",
+                Set.of(URI.create("http://localhost:5000/"))
+            )
+        );
     }
 
     public static void main(String[] args) {
         new App();
     }
-
-
-    
 
     /*
     private App() {
