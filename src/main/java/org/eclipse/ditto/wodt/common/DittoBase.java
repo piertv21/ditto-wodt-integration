@@ -44,14 +44,14 @@ import com.neovisionaries.ws.client.WebSocket;
 /**
  * Reads configuration properties and instantiates {@link org.eclipse.ditto.client.DittoClient}s.
  */
-public abstract class DittoBase {
+public class DittoBase {
 
     private static final ConfigProperties CONFIG_PROPERTIES = ConfigProperties.getInstance();
     private static final int TIMEOUT = 10;
-    protected final DittoClient client;
-    protected AuthorizationSubject authorizationSubject;
+    private final DittoClient client;
+    private AuthorizationSubject authorizationSubject;
 
-    protected DittoBase() {
+    public DittoBase() {
         try {
             client = buildClient().connect().toCompletableFuture().get(TIMEOUT, TimeUnit.SECONDS);
         } catch (final InterruptedException | ExecutionException | TimeoutException e) {
@@ -59,7 +59,11 @@ public abstract class DittoBase {
         }
     }
 
-    protected void startConsumeChanges(final DittoClient client) {
+    public DittoClient getClient() {
+        return this.client;
+    }
+
+    private void startConsumeChanges(final DittoClient client) {
         try {
             client.twin().startConsumption().toCompletableFuture().get(TIMEOUT, TimeUnit.SECONDS);
         } catch (final InterruptedException | ExecutionException | TimeoutException e) {
@@ -165,6 +169,4 @@ public abstract class DittoBase {
     public void terminate() {
         client.destroy();
     }
-
-
 }

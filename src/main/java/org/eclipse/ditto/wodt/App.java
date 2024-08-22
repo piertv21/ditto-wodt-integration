@@ -7,14 +7,13 @@ import org.eclipse.ditto.things.model.Thing;
 import org.eclipse.ditto.wodt.DTDManager.impl.BulbHolderDTOntology;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.api.WoDTDigitalAdapterConfiguration;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl.WoDTDigitalAdapter;
-import org.eclipse.ditto.wodt.common.DittoBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*
  * Application entry point.
  */
-public final class App extends DittoBase {
+public final class App {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
     private WoDTDigitalAdapter digitalAdapter;
@@ -24,16 +23,14 @@ public final class App extends DittoBase {
     private Thing thing;
 
     private App() {
-        super();
         init();
-        terminate();
     }
 
     public void init() {
         // Crea un'istanza del DittoClientThread
-        DittoClientThread dittoClientRunnable = new DittoClientThread(client);
+        /*DittoClientThread dittoClientRunnable = new DittoClientThread(client);
         Thread dittoClientThread = new Thread(dittoClientRunnable);
-        dittoClientThread.start();
+        dittoClientThread.start();*/
 
         // Ora puoi avviare il server Javalin o fare altre operazioni dipendenti dal client Ditto
         this.digitalAdapter = new WoDTDigitalAdapter(
