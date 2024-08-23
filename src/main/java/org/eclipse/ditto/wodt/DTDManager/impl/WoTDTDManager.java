@@ -57,6 +57,7 @@ public class WoTDTDManager implements DTDManager {
     private final Map<String, ThingProperty<Object>> properties;
     private final Map<String, ThingProperty<Object>> relationships;
     private final Map<String, ThingAction<Object, Object>> actions;
+    
     // TO DO: aggiungi eventi
 
     /**

@@ -1,26 +1,14 @@
 package org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl;
 
-/*
- * Copyright (c) 2024. Andrea Giulianelli
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.ditto.client.changes.ThingChange;
 import org.eclipse.ditto.client.live.messages.RepliableMessage;
+import org.eclipse.ditto.things.model.Thing;
+import org.eclipse.ditto.things.model.ThingId;
 import org.eclipse.ditto.wodt.DTDManager.api.DTDManager;
 import org.eclipse.ditto.wodt.DTDManager.impl.WoTDTDManager;
 import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
@@ -30,17 +18,31 @@ import org.eclipse.ditto.wodt.PlatformManagementInterface.impl.BasePlatformManag
 import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.api.WoDTWebServer;
 import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.impl.WoDTWebServerImpl;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.api.WoDTDigitalAdapterConfiguration;
+import org.eclipse.ditto.wodt.common.DittoBase;
+import org.eclipse.ditto.wodt.common.ThingModelElement;
+import static org.eclipse.ditto.wodt.common.ThingUtils.extractDataFromThing;
 
 /**
  * This class represents the Eclipse Ditto Adapter that allows to implement the WoDT Digital Twin layer
 * implementing the components of the Abstract Architecture.
 */
 public final class WoDTDigitalAdapter {
+
+    private static final int DITTO_PORT_NUMBER = 3000;
+    private static final String DITTO_THING_ID = "io.eclipseprojects.ditto:bulb-holder";
+    private static final String BASE_URL = "http://localhost:" + DITTO_PORT_NUMBER +
+        "/api/2/things/" + DITTO_THING_ID;
+
     private final DTKGEngine dtkgEngine;
     private final DTDManager dtdManager;
     private final WoDTWebServer woDTWebServer;
     private final PlatformManagementInterface platformManagementInterface;
-    private final String digitalTwinId;
+
+    private DittoBase dittoBase;
+    private List<ThingModelElement> contextExtensionsList;
+    private List<ThingModelElement> propertiesList;
+    private List<ThingModelElement> actionsList;
+    private List<ThingModelElement> eventsList;
 
     /**
      * Default constructor.
@@ -49,10 +51,13 @@ public final class WoDTDigitalAdapter {
     */
     public WoDTDigitalAdapter(
         final String digitalAdapterId,
-        final WoDTDigitalAdapterConfiguration configuration,
-        final String digitalTwinId
+        final WoDTDigitalAdapterConfiguration configuration
     ) {
-        this.digitalTwinId = digitalTwinId;
+        this.dittoBase = new DittoBase();
+        this.contextExtensionsList = new ArrayList<>();
+        this.propertiesList = new ArrayList<>();
+        this.actionsList = new ArrayList<>();
+        this.eventsList = new ArrayList<>();     
         this.platformManagementInterface = new BasePlatformManagementInterface(
                 configuration.getDigitalTwinUri());
         this.dtkgEngine = new JenaDTKGEngine(configuration.getDigitalTwinUri());
@@ -63,6 +68,9 @@ public final class WoDTDigitalAdapter {
                 configuration.getPortNumber(),
                 this.platformManagementInterface
         );
+
+        this.init(configuration);
+
         this.woDTWebServer = new WoDTWebServerImpl(
                 configuration.getPortNumber(),
                 this.dtkgEngine,
@@ -81,8 +89,76 @@ public final class WoDTDigitalAdapter {
         );
         this.woDTWebServer.start();
         
-        DittoClientThread dittoClientThread = new DittoClientThread(this);
+        DittoThingListener dittoClientThread = new DittoThingListener(this);
         dittoClientThread.start();
+    }
+
+    private void init(WoDTDigitalAdapterConfiguration configuration) {        
+        Thing thing = dittoBase.getClient().twin()
+            .forId(ThingId.of(DITTO_THING_ID))
+            .retrieve()
+            .toCompletableFuture()
+            .join();
+
+        List<List<ThingModelElement>> result = extractDataFromThing(thing);
+        this.contextExtensionsList = result.get(0);
+        this.propertiesList = result.get(1);
+        this.actionsList = result.get(2);
+        this.eventsList = result.get(3);
+
+        // PROPERTIES (Thing Attributes)
+        thing.getAttributes().ifPresent(attributes -> {
+            attributes.forEach((attribute) -> {
+                ThingModelElement prop = this.propertiesList.stream()
+                    .filter(p -> p.getElement().equals(attribute.getKey().toString()))
+                    .findFirst()
+                    .orElse(null);
+                if(prop != null) {
+                    configuration.getOntology().convertPropertyValue(
+                        attribute.getKey().toString(),
+                        attribute.getValue().toString()
+                    ).ifPresent(triple ->
+                            this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                    );
+                    this.dtdManager.addProperty(attribute.getKey().toString());
+                }
+            });
+        });
+
+        // PROPERTIES, ACTIONS, EVENTS (from Thing Features)
+        thing.getFeatures().ifPresent(features -> {
+            features.forEach((featureName) -> {
+                featureName.getProperties().ifPresent(properties -> {
+                    properties.forEach((property) -> {
+                        ThingModelElement featureProp = this.propertiesList.stream()
+                            .filter(p -> p.getElement().equals(property.getKey().toString()))
+                            .filter(p -> p.getValue().get().equals(featureName.getId()))
+                            .findFirst()
+                            .orElse(null);
+                        if(featureProp != null) {
+                            configuration.getOntology().convertPropertyValue(
+                                property.getKey().toString(),
+                                property.getValue().toString()
+                            ).ifPresent(triple ->
+                                this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                            );
+                            this.dtdManager.addProperty(property.getKey().toString());
+                        }
+                    });
+                });
+            });
+        });
+
+        // ACTIONS (Thing Actions)
+        this.actionsList.stream()
+            .filter(action -> action.getValue().isEmpty()) // No associated feature = Thing Action
+            .forEach(action -> {                
+                this.dtdManager.addAction(action.getElement());
+                this.dtkgEngine.addActionId(action.getElement());
+            });
+
+        // EVENTS (Thing Events)
+        
     }
 
     public void onThingChange(ThingChange change) {

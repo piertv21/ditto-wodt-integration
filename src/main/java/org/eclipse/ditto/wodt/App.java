@@ -12,8 +12,8 @@ import org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl.WoDTDigitalAdapter;
  */
 public final class App {
 
-    private static final String DITTO_THING_ID = "io.eclipseprojects.ditto:floor-lamp-0815";
     private static final int MODULE_PORT_NUMBER = 3000;
+    private static final String PLATFORM_URL = "http://localhost:5000/";
     
     private App() {
         new WoDTDigitalAdapter(
@@ -23,9 +23,8 @@ public final class App {
                 new BulbHolderDTOntology(),
                 MODULE_PORT_NUMBER,
                 "bulbHolderPA",
-                Set.of(URI.create("http://localhost:5000/"))
-            ),
-            DITTO_THING_ID
+                Set.of(URI.create(PLATFORM_URL))
+            )
         );
     }
 

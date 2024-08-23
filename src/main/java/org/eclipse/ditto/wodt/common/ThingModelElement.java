@@ -6,9 +6,9 @@ import java.util.Optional;
  * Class representing a Thing Model element.
  */
 public class ThingModelElement {
-    public final String element;
-    public final Optional<String> value;
-    public final Optional<String> additionalData;
+    private final String element;
+    private final Optional<String> value;
+    private final Optional<String> additionalData;
 
     public ThingModelElement(String element, Optional<String> value, Optional<String> additionalData) {
         this.element = element;
@@ -43,5 +43,17 @@ public class ThingModelElement {
                 ", value='" + value + '\'' +
                 ", additionalData=" + additionalData +
                 '}';
+    }
+    
+    public String getElement() {
+        return this.element;
+    }
+
+    public Optional<String> getValue() {
+        return this.value;
+    }
+
+    public Optional<String> getAdditionalData() {
+        return this.additionalData;
     }
 }

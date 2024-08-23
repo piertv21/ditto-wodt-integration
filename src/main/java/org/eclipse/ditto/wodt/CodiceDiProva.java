@@ -1,9 +1,5 @@
 package org.eclipse.ditto.wodt;
 
-import java.util.logging.Logger;
-
-import org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl.WoDTDigitalAdapter;
-
 public class CodiceDiProva {
     
     // (EVENTI) SUBSCRIBE PER RICEZIONE NUOVI MESSAGGI (DENTRO TRY CATCH) USARE STESSO SUBJECT PER RISPONDERE

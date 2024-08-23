@@ -28,7 +28,7 @@ import org.eclipse.ditto.wodt.model.ontology.Node;
 import org.eclipse.ditto.wodt.model.ontology.Property;
 
 /**
- * Ontology for the {@link LampDT}.
+ * Ontology for the BulbHolder Digital Twin.
  */
 public final class BulbHolderDTOntology implements DTOntology {
     private static final Map<String, Pair<String, String>> propertyMap = Map.of(
