@@ -18,6 +18,7 @@ package org.eclipse.ditto.wodt.DTDManager.impl;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 
 import org.eclipse.ditto.wodt.DTDManager.api.DTDManager;
 import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterfaceReader;
+import org.eclipse.ditto.wodt.common.ThingModelElement;
 import org.eclipse.ditto.wodt.model.ontology.DTOntology;
 import org.eclipse.ditto.wodt.model.ontology.Property;
 import org.eclipse.ditto.wodt.model.ontology.WoDTVocabulary;
@@ -57,8 +59,8 @@ public class WoTDTDManager implements DTDManager {
     private final Map<String, ThingProperty<Object>> properties;
     private final Map<String, ThingProperty<Object>> relationships;
     private final Map<String, ThingAction<Object, Object>> actions;
-    
-    // TO DO: aggiungi eventi
+    // TO DO: private final Map<String, ThingAction<Object, Object>> events;
+    private final List<ThingModelElement> contextExtensionsList;
 
     /**
      * Default constructor.
@@ -68,15 +70,19 @@ public class WoTDTDManager implements DTDManager {
     * @param portNumber the port number where to offer the affordances
     * @param platformManagementInterfaceReader the platform management interface reader reference
     */
-    public WoTDTDManager(final String digitalTwinUri,
-                final DTOntology ontology,
-                final String physicalAssetId,
-                final int portNumber,
-                final PlatformManagementInterfaceReader platformManagementInterfaceReader) {
+    public WoTDTDManager(
+        final String digitalTwinUri,
+        final DTOntology ontology,
+        final String physicalAssetId,
+        final int portNumber,
+        final PlatformManagementInterfaceReader platformManagementInterfaceReader,
+        final List<ThingModelElement> contextExtensionsList
+    ) {
         this.digitalTwinUri = digitalTwinUri;
         this.ontology = ontology;
         this.physicalAssetId = physicalAssetId;
         this.portNumber = portNumber;
+        this.contextExtensionsList = contextExtensionsList;
         this.platformManagementInterfaceReader = platformManagementInterfaceReader;
         this.properties = new HashMap<>();
         this.relationships = new HashMap<>();
@@ -123,9 +129,13 @@ public class WoTDTDManager implements DTDManager {
     @Override
     public Thing<?, ?, ?> getDTD() {
         try {
+            Context context = new Context(THING_DESCRIPTION_CONTEXT);
+            contextExtensionsList.forEach(contextExtensions ->
+                context.addContext(contextExtensions.getElement(), contextExtensions.getValue().get())
+            );
             final ExposedThing thingDescription = new DefaultWot().produce(new Thing.Builder()
                     .setId(this.digitalTwinUri)
-                    .setObjectContext(new Context(THING_DESCRIPTION_CONTEXT))
+                    .setObjectContext(context)
                     .build()
             );
             this.initializeThingDescription(thingDescription);
@@ -202,6 +212,16 @@ public class WoTDTDManager implements DTDManager {
                 .setInput(null)
                 .setOutput(null)
                 .build());
+    }
+
+    @Override
+    public void addEvent(String rawEventName) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean removeEvent(String rawEventName) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /**

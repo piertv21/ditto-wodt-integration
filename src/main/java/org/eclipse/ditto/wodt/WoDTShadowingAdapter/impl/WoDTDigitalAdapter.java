@@ -1,6 +1,5 @@
 package org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,10 +53,18 @@ public final class WoDTDigitalAdapter {
         final WoDTDigitalAdapterConfiguration configuration
     ) {
         this.dittoBase = new DittoBase();
-        this.contextExtensionsList = new ArrayList<>();
-        this.propertiesList = new ArrayList<>();
-        this.actionsList = new ArrayList<>();
-        this.eventsList = new ArrayList<>();     
+        Thing thing = dittoBase.getClient().twin()
+            .forId(ThingId.of(DITTO_THING_ID))
+            .retrieve()
+            .toCompletableFuture()
+            .join();
+
+        List<List<ThingModelElement>> result = extractDataFromThing(thing);
+        this.contextExtensionsList = result.get(0);
+        this.propertiesList = result.get(1);
+        this.actionsList = result.get(2);
+        this.eventsList = result.get(3);
+
         this.platformManagementInterface = new BasePlatformManagementInterface(
                 configuration.getDigitalTwinUri());
         this.dtkgEngine = new JenaDTKGEngine(configuration.getDigitalTwinUri());
@@ -66,10 +73,11 @@ public final class WoDTDigitalAdapter {
                 configuration.getOntology(),
                 configuration.getPhysicalAssetId(),
                 configuration.getPortNumber(),
-                this.platformManagementInterface
+                this.platformManagementInterface,
+                this.contextExtensionsList
         );
 
-        this.init(configuration);
+        this.init(thing, configuration);
 
         this.woDTWebServer = new WoDTWebServerImpl(
                 configuration.getPortNumber(),
@@ -93,19 +101,7 @@ public final class WoDTDigitalAdapter {
         dittoClientThread.start();
     }
 
-    private void init(WoDTDigitalAdapterConfiguration configuration) {        
-        Thing thing = dittoBase.getClient().twin()
-            .forId(ThingId.of(DITTO_THING_ID))
-            .retrieve()
-            .toCompletableFuture()
-            .join();
-
-        List<List<ThingModelElement>> result = extractDataFromThing(thing);
-        this.contextExtensionsList = result.get(0);
-        this.propertiesList = result.get(1);
-        this.actionsList = result.get(2);
-        this.eventsList = result.get(3);
-
+    private void init(Thing thing, WoDTDigitalAdapterConfiguration configuration) {
         // PROPERTIES (Thing Attributes)
         thing.getAttributes().ifPresent(attributes -> {
             attributes.forEach((attribute) -> {
@@ -116,7 +112,7 @@ public final class WoDTDigitalAdapter {
                 if(prop != null) {
                     configuration.getOntology().convertPropertyValue(
                         attribute.getKey().toString(),
-                        attribute.getValue().toString()
+                        attribute.getValue().asString()
                     ).ifPresent(triple ->
                             this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                     );
@@ -151,7 +147,7 @@ public final class WoDTDigitalAdapter {
 
         // ACTIONS (Thing Actions)
         this.actionsList.stream()
-            .filter(action -> action.getValue().isEmpty()) // No associated feature = Thing Action
+            .filter(action -> action.getValue().isEmpty()) // Thing Action = no associated value
             .forEach(action -> {                
                 this.dtdManager.addAction(action.getElement());
                 this.dtkgEngine.addActionId(action.getElement());
