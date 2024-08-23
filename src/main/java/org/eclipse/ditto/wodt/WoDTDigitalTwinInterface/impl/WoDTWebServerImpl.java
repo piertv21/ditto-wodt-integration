@@ -23,7 +23,6 @@ import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
 import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterfaceNotifier;
 import org.eclipse.ditto.wodt.PlatformManagementInterface.impl.PlatformManagementInterfaceAPIControllerImpl;
 import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.api.WoDTWebServer;
-import org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl.DittoAPIControllerImpl;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.gson.JsonParseException;
@@ -39,7 +38,6 @@ public class WoDTWebServerImpl implements WoDTWebServer {
     private final int portNumber;
     private final WoDTDigitalTwinInterfaceControllerImpl wodtDigitalTwinInterfaceController;
     private final PlatformManagementInterfaceAPIControllerImpl platformManagementInterfaceAPIController;
-    private final DittoAPIControllerImpl dittoAPIController;
 
     /**
      * Default constructor.
@@ -63,7 +61,6 @@ public class WoDTWebServerImpl implements WoDTWebServer {
         this.platformManagementInterfaceAPIController = new PlatformManagementInterfaceAPIControllerImpl(
                 platformManagementInterfaceNotifier
         );
-        this.dittoAPIController = new DittoAPIControllerImpl();
     }
 
     @Override
@@ -73,6 +70,5 @@ public class WoDTWebServerImpl implements WoDTWebServer {
         app.exception(JsonParseException.class, (e, context) -> context.status(HttpStatus.BAD_REQUEST));
         this.wodtDigitalTwinInterfaceController.registerRoutes(app);
         this.platformManagementInterfaceAPIController.registerRoutes(app);
-        this.dittoAPIController.registerRoutes(app);
     }
 }

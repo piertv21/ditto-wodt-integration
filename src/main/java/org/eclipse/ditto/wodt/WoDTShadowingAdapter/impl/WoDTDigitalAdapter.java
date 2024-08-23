@@ -19,6 +19,8 @@ package org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.eclipse.ditto.client.changes.ThingChange;
+import org.eclipse.ditto.client.live.messages.RepliableMessage;
 import org.eclipse.ditto.wodt.DTDManager.api.DTDManager;
 import org.eclipse.ditto.wodt.DTDManager.impl.WoTDTDManager;
 import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
@@ -78,5 +80,18 @@ public final class WoDTDigitalAdapter {
                 this.platformManagementInterface
         );
         this.woDTWebServer.start();
+        
+        DittoClientThread dittoClientThread = new DittoClientThread(this);
+        dittoClientThread.start();
+    }
+
+    public void onThingChange(ThingChange change) {
+        // TO DO: implementa qui la logica per gestire i cambiamenti delle Thing
+        System.out.println("me ne occup io fratema");
+    }
+
+    public void onMessage(RepliableMessage message) {
+        // TO DO: implementa qui la logica per gestire i messaggi in arrivo
+        System.out.println("me ne sto occupando io fratema");
     }
 }
