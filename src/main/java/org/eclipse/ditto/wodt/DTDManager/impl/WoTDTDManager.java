@@ -60,11 +60,18 @@ public class WoTDTDManager implements DTDManager {
     private final Map<String, ThingProperty<Object>> relationships;
     private final Map<String, ThingAction<Object, Object>> actions;
     // TO DO: private final Map<String, ThingAction<Object, Object>> events;
-    private final List<ThingModelElement> contextExtensionsList;
 
-    private final static String THING_BASE_URL = "/api/2/things/{thingId}";
+    private final String baseUrl;
+    private final List<ThingModelElement> extractedContextExtensionsList;
+    private List<ThingModelElement> extractedPropertiesList;
+    private List<ThingModelElement> extractedActionsList;
+    private List<ThingModelElement> extractedEventsList;
+
     private final static String ATTRIBUTE_READ_URL = "/attributes/{attributePath}";
     private final static String PROPERTY_READ_URL = "/features/{featureId}/properties/{propertyPath}";
+    private final static String ACTION_URL = "/inbox/messages/";
+
+    // TO DO: migliorare diverse parti del codice (brutte o ripeetitive)
 
     /**
      * Default constructor.
@@ -80,13 +87,21 @@ public class WoTDTDManager implements DTDManager {
         final String physicalAssetId,
         final int portNumber,
         final PlatformManagementInterfaceReader platformManagementInterfaceReader,
-        final List<ThingModelElement> contextExtensionsList
+        final List<ThingModelElement> extractedContextExtensionsList,
+        final List<ThingModelElement> extractedPropertiesList,
+        final List<ThingModelElement> extractedActionsList,
+        final List<ThingModelElement> extractedEventsList,
+        final String baseUrl
     ) {
+        this.baseUrl = baseUrl;
         this.digitalTwinUri = digitalTwinUri;
         this.ontology = ontology;
         this.physicalAssetId = physicalAssetId;
         this.portNumber = portNumber;
-        this.contextExtensionsList = contextExtensionsList;
+        this.extractedContextExtensionsList = extractedContextExtensionsList;
+        this.extractedPropertiesList = extractedPropertiesList;
+        this.extractedActionsList = extractedActionsList;
+        this.extractedEventsList = extractedEventsList;
         this.platformManagementInterfaceReader = platformManagementInterfaceReader;
         this.properties = new HashMap<>();
         this.relationships = new HashMap<>();
@@ -134,7 +149,7 @@ public class WoTDTDManager implements DTDManager {
     public Thing<?, ?, ?> getDTD() {
         try {
             Context context = new Context(THING_DESCRIPTION_CONTEXT);
-            contextExtensionsList.forEach(contextExtensions ->
+            extractedContextExtensionsList.forEach(contextExtensions ->
                 context.addContext(contextExtensions.getElement(), contextExtensions.getValue().get())
             );
             final ExposedThing thingDescription = new DefaultWot().produce(new Thing.Builder()
@@ -150,16 +165,41 @@ public class WoTDTDManager implements DTDManager {
             thingDescription.getActions().forEach((name, action) ->
                 action.addForm(new Form.Builder()
                         .addOp(Operation.INVOKE_ACTION)
-                        .setHref("http://localhost:" + this.portNumber + "/action/" + name) // TO DO: edit qui
+                        .setHref(baseUrl + ACTION_URL + name) // TO DO: edit qui (per azioni sulle feature)
                         .build())
             );
+
+            // Add affordances to properties (& relationships)
+            thingDescription.getProperties().forEach((name, property) -> {
+                if(!name.equals("snapshot")) {
+                    ThingModelElement prop = extractedPropertiesList.stream()
+                        .filter(p -> p.getElement().equals(name))
+                        .findFirst()
+                        .orElse(null);
+                    String href = baseUrl;
+                    if(prop.getValue().isPresent()) {
+                        href += PROPERTY_READ_URL.replace("{featureId}", prop.getValue().get())
+                            .replace("{propertyPath}", name);
+                    } else {
+                        href += ATTRIBUTE_READ_URL.replace("{attributePath}", name);
+                    }
+                    property.addForm(new Form.Builder() // Read
+                            .addOp(Operation.READ_PROPERTY)
+                            .setHref(href)
+                            .build());
+                    property.addForm(new Form.Builder() // Observe
+                            .addOp(Operation.OBSERVE_PROPERTY)
+                            .setHref(href)
+                            .setSubprotocol("sse")
+                            .build());
+                }
+            });
             return thingDescription;
         } catch (WotException e) {
             throw new IllegalStateException("Impossible to create the WoT DTD Manager in the current state", e);
         }
     }
-
-    // TODO: inserisci le context extension in @context nel TD finale
+    
     private void initializeThingDescription(final ExposedThing thingDescription) {
         thingDescription.setObjectType(new Type(this.ontology.getDigitalTwinType()));
         thingDescription.addProperty(SNAPSHOT_DTD_PROPERTY, new ExposedThingProperty.Builder()

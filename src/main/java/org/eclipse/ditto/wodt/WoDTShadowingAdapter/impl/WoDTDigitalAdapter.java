@@ -5,7 +5,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.ditto.client.changes.ThingChange;
-import org.eclipse.ditto.client.live.messages.RepliableMessage;
 import org.eclipse.ditto.things.model.Thing;
 import org.eclipse.ditto.things.model.ThingId;
 import org.eclipse.ditto.wodt.DTDManager.api.DTDManager;
@@ -27,7 +26,7 @@ import static org.eclipse.ditto.wodt.common.ThingUtils.extractDataFromThing;
 */
 public final class WoDTDigitalAdapter {
 
-    private static final int DITTO_PORT_NUMBER = 3000;
+    private static final int DITTO_PORT_NUMBER = 8080;
     private static final String DITTO_THING_ID = "io.eclipseprojects.ditto:bulb-holder";
     private static final String BASE_URL = "http://localhost:" + DITTO_PORT_NUMBER +
         "/api/2/things/" + DITTO_THING_ID;
@@ -72,10 +71,14 @@ public final class WoDTDigitalAdapter {
                 configuration.getPhysicalAssetId(),
                 configuration.getPortNumber(),
                 this.platformManagementInterface,
-                result.get(0)
+                result.get(0),
+                this.propertiesList,
+                this.actionsList,
+                this.eventsList,
+                BASE_URL
         );
 
-        this.init(thing, configuration);
+        this.syncWithDittoThing(thing, configuration);
 
         this.woDTWebServer = new WoDTWebServerImpl(
                 configuration.getPortNumber(),
@@ -94,12 +97,14 @@ public final class WoDTDigitalAdapter {
                 this.platformManagementInterface
         );
         this.woDTWebServer.start();
+        /* TO DO: configuration.getPlatformToRegister().forEach(platform ->
+                this.platformManagementInterface.registerToPlatform(platform, this.dtdManager.getDTD().toJson()));*/
         
         DittoThingListener dittoClientThread = new DittoThingListener(this);
         dittoClientThread.start();
     }
 
-    private void init(Thing thing, WoDTDigitalAdapterConfiguration configuration) {
+    private void syncWithDittoThing(Thing thing, WoDTDigitalAdapterConfiguration configuration) {
         // PROPERTIES (Thing Attributes)
         thing.getAttributes().ifPresent(attributes -> {
             attributes.forEach((attribute) -> {
@@ -155,13 +160,14 @@ public final class WoDTDigitalAdapter {
         
     }
 
+    public void stop() {
+        // TO DO
+    }
+
     public void onThingChange(ThingChange change) {
         // TO DO: implementa qui la logica per gestire i cambiamenti delle Thing
         System.out.println("me ne occup io fratema");
     }
 
-    public void onMessage(RepliableMessage message) {
-        // TO DO: implementa qui la logica per gestire i messaggi in arrivo
-        System.out.println("me ne sto occupando io fratema");
-    }
+    public void handlePropertyUpdate() {}
 }
