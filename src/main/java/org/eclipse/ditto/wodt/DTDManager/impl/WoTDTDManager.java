@@ -62,6 +62,10 @@ public class WoTDTDManager implements DTDManager {
     // TO DO: private final Map<String, ThingAction<Object, Object>> events;
     private final List<ThingModelElement> contextExtensionsList;
 
+    private final static String THING_BASE_URL = "/api/2/things/{thingId}";
+    private final static String ATTRIBUTE_READ_URL = "/attributes/{attributePath}";
+    private final static String PROPERTY_READ_URL = "/features/{featureId}/properties/{propertyPath}";
+
     /**
      * Default constructor.
     * @param digitalTwinUri the uri of the WoDT Digital Twin
@@ -179,6 +183,16 @@ public class WoTDTDManager implements DTDManager {
                         );
         thingDescription.getMetadata().put(WoDTVocabulary.PHYSICAL_ASSET_ID.getUri(), this.physicalAssetId);
         thingDescription.getMetadata().put(WoDTVocabulary.VERSION.getUri(), VERSION);
+
+        // Ditto basic security scheme
+        Map<String, Object> securityDefinitions = new HashMap<>();
+        Map<String, String> basicSc = new HashMap<>();
+        basicSc.put("in", "header");
+        basicSc.put("scheme", "basic");
+        securityDefinitions.put("basic_sc", basicSc);
+
+        thingDescription.getMetadata().put("securityDefinitions", securityDefinitions);
+        thingDescription.getMetadata().put("security", "basic_sc");
     }
 
     private Optional<ThingProperty<Object>> createThingDescriptionProperty(

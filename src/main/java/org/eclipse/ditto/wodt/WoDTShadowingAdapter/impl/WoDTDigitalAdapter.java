@@ -38,7 +38,6 @@ public final class WoDTDigitalAdapter {
     private final PlatformManagementInterface platformManagementInterface;
 
     private DittoBase dittoBase;
-    private List<ThingModelElement> contextExtensionsList;
     private List<ThingModelElement> propertiesList;
     private List<ThingModelElement> actionsList;
     private List<ThingModelElement> eventsList;
@@ -60,7 +59,6 @@ public final class WoDTDigitalAdapter {
             .join();
 
         List<List<ThingModelElement>> result = extractDataFromThing(thing);
-        this.contextExtensionsList = result.get(0);
         this.propertiesList = result.get(1);
         this.actionsList = result.get(2);
         this.eventsList = result.get(3);
@@ -74,7 +72,7 @@ public final class WoDTDigitalAdapter {
                 configuration.getPhysicalAssetId(),
                 configuration.getPortNumber(),
                 this.platformManagementInterface,
-                this.contextExtensionsList
+                result.get(0)
         );
 
         this.init(thing, configuration);
