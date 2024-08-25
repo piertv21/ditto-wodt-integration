@@ -251,6 +251,7 @@ public class WoTDTDManager implements DTDManager {
 
             return Optional.of(new ThingProperty.Builder()
                     .setObjectType(propertyValueType.get())
+                    .setType(propertyValueType.get().split("#")[1]) // TO DO: edit qui
                     .setReadOnly(true)
                     .setObservable(true)
                     .setOptionalProperties(metadata)

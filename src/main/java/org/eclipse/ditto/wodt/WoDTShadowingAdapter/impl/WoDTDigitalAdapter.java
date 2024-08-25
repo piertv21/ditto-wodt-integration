@@ -35,11 +35,14 @@ public final class WoDTDigitalAdapter {
     private final DTDManager dtdManager;
     private final WoDTWebServer woDTWebServer;
     private final PlatformManagementInterface platformManagementInterface;
+    private final WoDTDigitalAdapterConfiguration configuration;
 
     private DittoBase dittoBase;
     private List<ThingModelElement> propertiesList;
     private List<ThingModelElement> actionsList;
     private List<ThingModelElement> eventsList;
+
+    // TO DO: ottimizzare al meglio il codice evitando ripetizioni
 
     /**
      * Default constructor.
@@ -50,7 +53,8 @@ public final class WoDTDigitalAdapter {
         final String digitalAdapterId,
         final WoDTDigitalAdapterConfiguration configuration
     ) {
-        this.dittoBase = new DittoBase();
+        this.configuration = configuration;
+        this.dittoBase = new DittoBase(); // TO DO: rimuovi se non usato sotto
         Thing thing = dittoBase.getClient().twin()
             .forId(ThingId.of(DITTO_THING_ID))
             .retrieve()
@@ -157,17 +161,69 @@ public final class WoDTDigitalAdapter {
             });
 
         // EVENTS (Thing Events)
-        
-    }
-
-    public void stop() {
         // TO DO
     }
 
-    public void onThingChange(ThingChange change) {
-        // TO DO: implementa qui la logica per gestire i cambiamenti delle Thing
-        System.out.println("me ne occup io fratema");
+    public void stop() {
+        this.platformManagementInterface.signalDigitalTwinDeletion();
     }
 
-    public void handlePropertyUpdate() {}
+    public void onThingChange(ThingChange change) {
+        System.out.println(change);
+
+        // CUD Attributi
+        // CUD Features
+
+        switch (change.getAction()) {
+            case CREATED:
+                // TO DO
+                break;
+            case DELETED:
+                // TO DO
+                break;
+            case UPDATED:
+                if (change.getThing().get().getAttributes().isPresent()) {  // Update Thing Attributes
+                    change.getThing().get().getAttributes().get().forEach((attribute) -> {
+                        ThingModelElement prop = this.propertiesList.stream()
+                            .filter(p -> p.getElement().equals(attribute.getKey().toString()))
+                            .findFirst()
+                            .orElse(null);
+                        if(prop != null) {
+                            configuration.getOntology().convertPropertyValue(
+                                attribute.getKey().toString(),
+                                attribute.getValue().asString()
+                            ).ifPresent(triple ->
+                                    this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                            );
+                            this.dtdManager.addProperty(attribute.getKey().toString());
+                        }
+                    });
+                }
+                if (change.getThing().get().getFeatures().isPresent()) {    // Update Thing Features (Properties)
+                    change.getThing().get().getFeatures().get().forEach((featureName) -> {
+                        featureName.getProperties().ifPresent(properties -> {
+                            properties.forEach((property) -> {
+                                ThingModelElement featureProp = this.propertiesList.stream()
+                                    .filter(p -> p.getElement().equals(property.getKey().toString()))
+                                    .filter(p -> p.getValue().get().equals(featureName.getId()))
+                                    .findFirst()
+                                    .orElse(null);
+                                if(featureProp != null) {
+                                    configuration.getOntology().convertPropertyValue(
+                                        property.getKey().toString(),
+                                        property.getValue().toString()
+                                    ).ifPresent(triple ->
+                                        this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                                    );
+                                    this.dtdManager.addProperty(property.getKey().toString());
+                                }
+                            });
+                        });
+                    });
+                }
+                break;
+            default:
+                break;
+        }
+    }
 }
