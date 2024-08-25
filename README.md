@@ -14,9 +14,8 @@ The configured usernames and passwords must be added to the nginx.htpasswd of Ec
 htpasswd nginx.htpasswd user1
 ```
 
-To add a Ditto Thing:
-- Edit Ditto Thing ID in the entrypoint
-- Add its Thing Models in resources/ folder
-- Add its Ontology in DTDManager/impl/ folder
+## To integrate a Ditto Thing:
+- Implement and add your Ditto Thing Ontology
+- Edit Ditto Thing ID and Ontology in the constructor in App.java
 
-Note: some libraries such as "wot-servient" may have to be installed manually.
+Note: some libraries such as "wot-servient" may have to be imported manually.

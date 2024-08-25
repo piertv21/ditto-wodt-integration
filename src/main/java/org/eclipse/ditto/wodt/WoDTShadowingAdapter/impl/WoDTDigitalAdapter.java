@@ -1,5 +1,7 @@
 package org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,16 +22,17 @@ import org.eclipse.ditto.wodt.common.DittoBase;
 import org.eclipse.ditto.wodt.common.ThingModelElement;
 import static org.eclipse.ditto.wodt.common.ThingUtils.extractDataFromThing;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * This class represents the Eclipse Ditto Adapter that allows to implement the WoDT Digital Twin layer
 * implementing the components of the Abstract Architecture.
 */
 public final class WoDTDigitalAdapter {
 
-    private static final int DITTO_PORT_NUMBER = 8080;
-    private static final String DITTO_THING_ID = "io.eclipseprojects.ditto:bulb-holder";
-    private static final String BASE_URL = "http://localhost:" + DITTO_PORT_NUMBER +
-        "/api/2/things/" + DITTO_THING_ID;
+    private static final int DITTO_PORT_NUMBER = 8080;    
+    private static final String BASE_URL = "http://localhost:" + DITTO_PORT_NUMBER + "/api/2/things/";
 
     private final DTKGEngine dtkgEngine;
     private final DTDManager dtdManager;
@@ -38,6 +41,7 @@ public final class WoDTDigitalAdapter {
     private final WoDTDigitalAdapterConfiguration configuration;
 
     private DittoBase dittoBase;
+    private DittoThingListener dittoClientThread;
     private List<ThingModelElement> propertiesList;
     private List<ThingModelElement> actionsList;
     private List<ThingModelElement> eventsList;
@@ -51,12 +55,13 @@ public final class WoDTDigitalAdapter {
     */
     public WoDTDigitalAdapter(
         final String digitalAdapterId,
-        final WoDTDigitalAdapterConfiguration configuration
+        final WoDTDigitalAdapterConfiguration configuration,
+        final String dittoThingId
     ) {
         this.configuration = configuration;
         this.dittoBase = new DittoBase(); // TO DO: rimuovi se non usato sotto
         Thing thing = dittoBase.getClient().twin()
-            .forId(ThingId.of(DITTO_THING_ID))
+            .forId(ThingId.of(dittoThingId))
             .retrieve()
             .toCompletableFuture()
             .join();
@@ -79,7 +84,7 @@ public final class WoDTDigitalAdapter {
                 this.propertiesList,
                 this.actionsList,
                 this.eventsList,
-                BASE_URL
+                BASE_URL + dittoThingId
         );
 
         this.syncWithDittoThing(thing, configuration);
@@ -104,27 +109,57 @@ public final class WoDTDigitalAdapter {
         /* TO DO: configuration.getPlatformToRegister().forEach(platform ->
                 this.platformManagementInterface.registerToPlatform(platform, this.dtdManager.getDTD().toJson()));*/
         
-        DittoThingListener dittoClientThread = new DittoThingListener(this);
+        this.dittoClientThread = new DittoThingListener(this);
         dittoClientThread.start();
+    }
+
+    private List<String> extractSubPropertiesNames(String jsonProperty) {
+        List<String> subProperties = new ArrayList<>();
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            JsonNode rootNode = objectMapper.readTree(jsonProperty);
+            if (rootNode.isObject()) {
+                Iterator<String> fieldNames = rootNode.fieldNames();
+                while (fieldNames.hasNext()) {
+                    String fieldName = fieldNames.next();
+                    subProperties.add(fieldName);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error");
+        }
+        return subProperties;
+    }
+
+    public static String extractSubPropertyValue(String jsonValue, String key) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            JsonNode rootNode = objectMapper.readTree(jsonValue);
+            if (rootNode.isObject() && rootNode.has(key)) {
+                JsonNode subPropertyNode = rootNode.get(key);
+                return subPropertyNode.asText();
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return null;
     }
 
     private void syncWithDittoThing(Thing thing, WoDTDigitalAdapterConfiguration configuration) {
         // PROPERTIES (Thing Attributes)
         thing.getAttributes().ifPresent(attributes -> {
             attributes.forEach((attribute) -> {
-                ThingModelElement prop = this.propertiesList.stream()
+                ThingModelElement property = this.propertiesList.stream()
                     .filter(p -> p.getElement().equals(attribute.getKey().toString()))
                     .findFirst()
                     .orElse(null);
-                if(prop != null) {
-                    configuration.getOntology().convertPropertyValue(
-                        attribute.getKey().toString(),
-                        attribute.getValue().asString()
-                    ).ifPresent(triple ->
-                            this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
-                    );
-                    this.dtdManager.addProperty(attribute.getKey().toString());
-                }
+                configuration.getOntology().convertPropertyValue(
+                    property.getElement(),
+                    attribute.getValue().asString()
+                ).ifPresent(triple ->
+                        this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                );
+                this.dtdManager.addProperty(property.getElement());
             });
         });
 
@@ -133,19 +168,37 @@ public final class WoDTDigitalAdapter {
             features.forEach((featureName) -> {
                 featureName.getProperties().ifPresent(properties -> {
                     properties.forEach((property) -> {
-                        ThingModelElement featureProp = this.propertiesList.stream()
-                            .filter(p -> p.getElement().equals(property.getKey().toString()))
-                            .filter(p -> p.getValue().get().equals(featureName.getId()))
-                            .findFirst()
-                            .orElse(null);
-                        if(featureProp != null) {
+                        List<String> subProperties = extractSubPropertiesNames(property.getValue().toString()); // Check for subproperties
+                        if(!subProperties.isEmpty()) {
+                            subProperties.forEach(subProperty -> {                                
+                                ThingModelElement featureProperty = this.propertiesList.stream()
+                                    .filter(p -> p.getElement().equals(property.getKey().toString() + "_" + subProperty))
+                                    .filter(p -> p.getValue().get().equals(featureName.getId()))
+                                    .findFirst()
+                                    .orElse(null);
+                                String fullPropertyName = featureProperty.getValue().get() + "_" + property.getKey() + "_" + subProperty;
+                                configuration.getOntology().convertPropertyValue(
+                                    fullPropertyName,
+                                    extractSubPropertyValue(property.getValue().toString(), subProperty)
+                                ).ifPresent(triple ->
+                                    this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                                );
+                                this.dtdManager.addProperty(fullPropertyName);
+                            });
+                        } else {
+                            ThingModelElement featureProperty = this.propertiesList.stream()
+                                .filter(p -> p.getElement().equals(property.getKey().toString()))
+                                .filter(p -> p.getValue().get().equals(featureName.getId()))
+                                .findFirst()
+                                .orElse(null);
+                            String fullPropertyName = featureProperty.getValue().get() + "_" + property.getKey().toString();
                             configuration.getOntology().convertPropertyValue(
-                                property.getKey().toString(),
+                                fullPropertyName,
                                 property.getValue().toString()
                             ).ifPresent(triple ->
                                 this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                             );
-                            this.dtdManager.addProperty(property.getKey().toString());
+                            this.dtdManager.addProperty(fullPropertyName);
                         }
                     });
                 });
@@ -166,6 +219,7 @@ public final class WoDTDigitalAdapter {
 
     public void stop() {
         this.platformManagementInterface.signalDigitalTwinDeletion();
+        this.dittoClientThread.stopThread();
     }
 
     public void onThingChange(ThingChange change) {
@@ -188,15 +242,13 @@ public final class WoDTDigitalAdapter {
                             .filter(p -> p.getElement().equals(attribute.getKey().toString()))
                             .findFirst()
                             .orElse(null);
-                        if(prop != null) {
-                            configuration.getOntology().convertPropertyValue(
-                                attribute.getKey().toString(),
-                                attribute.getValue().asString()
-                            ).ifPresent(triple ->
-                                    this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
-                            );
-                            this.dtdManager.addProperty(attribute.getKey().toString());
-                        }
+                        configuration.getOntology().convertPropertyValue(
+                            attribute.getKey().toString(),
+                            attribute.getValue().asString()
+                        ).ifPresent(triple ->
+                                this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                        );
+                        this.dtdManager.addProperty(attribute.getKey().toString());
                     });
                 }
                 if (change.getThing().get().getFeatures().isPresent()) {    // Update Thing Features (Properties)
@@ -208,15 +260,13 @@ public final class WoDTDigitalAdapter {
                                     .filter(p -> p.getValue().get().equals(featureName.getId()))
                                     .findFirst()
                                     .orElse(null);
-                                if(featureProp != null) {
-                                    configuration.getOntology().convertPropertyValue(
-                                        property.getKey().toString(),
-                                        property.getValue().toString()
-                                    ).ifPresent(triple ->
-                                        this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
-                                    );
-                                    this.dtdManager.addProperty(property.getKey().toString());
-                                }
+                                configuration.getOntology().convertPropertyValue(
+                                    property.getKey().toString(),
+                                    property.getValue().toString()
+                                ).ifPresent(triple ->
+                                    this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                                );
+                                this.dtdManager.addProperty(property.getKey().toString());
                             });
                         });
                     });

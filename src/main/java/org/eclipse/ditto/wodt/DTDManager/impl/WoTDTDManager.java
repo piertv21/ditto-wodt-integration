@@ -172,22 +172,32 @@ public class WoTDTDManager implements DTDManager {
             // Add affordances to properties (& relationships)
             thingDescription.getProperties().forEach((name, property) -> {
                 if(!name.equals("snapshot")) {
-                    ThingModelElement prop = extractedPropertiesList.stream()
-                        .filter(p -> p.getElement().equals(name))
-                        .findFirst()
-                        .orElse(null);
+                    String[] splitPropertyName = splitStringAtFirstUnderscore(name);
+                    ThingModelElement prop;
+                    if(splitPropertyName != null) {
+                        prop = extractedPropertiesList.stream()
+                            .filter(p -> p.getElement().equals(splitPropertyName[1]))
+                            .filter(p -> p.getValue().get().equals(splitPropertyName[0]))
+                            .findFirst()
+                            .orElse(null);
+                    } else {
+                        prop = extractedPropertiesList.stream()
+                            .filter(p -> p.getElement().equals(name))
+                            .findFirst()
+                            .orElse(null);
+                    }
                     String href = baseUrl;
                     if(prop.getValue().isPresent()) {
                         href += PROPERTY_READ_URL.replace("{featureId}", prop.getValue().get())
-                            .replace("{propertyPath}", name);
+                            .replace("{propertyPath}", splitPropertyName[1].replace("_", "/"));
                     } else {
                         href += ATTRIBUTE_READ_URL.replace("{attributePath}", name);
                     }
-                    property.addForm(new Form.Builder() // Read
+                    property.addForm(new Form.Builder()
                             .addOp(Operation.READ_PROPERTY)
                             .setHref(href)
                             .build());
-                    property.addForm(new Form.Builder() // Observe
+                    property.addForm(new Form.Builder()
                             .addOp(Operation.OBSERVE_PROPERTY)
                             .setHref(href)
                             .setSubprotocol("sse")
@@ -197,6 +207,17 @@ public class WoTDTDManager implements DTDManager {
             return thingDescription;
         } catch (WotException e) {
             throw new IllegalStateException("Impossible to create the WoT DTD Manager in the current state", e);
+        }
+    }
+
+    public String[] splitStringAtFirstUnderscore(String input) {
+        int underscoreIndex = input.indexOf('_');
+        if (underscoreIndex != -1) {
+            String firstPart = input.substring(0, underscoreIndex);
+            String secondPart = input.substring(underscoreIndex + 1);
+            return new String[]{firstPart, secondPart};
+        } else {
+            return null;
         }
     }
     
@@ -251,7 +272,7 @@ public class WoTDTDManager implements DTDManager {
 
             return Optional.of(new ThingProperty.Builder()
                     .setObjectType(propertyValueType.get())
-                    .setType(propertyValueType.get().split("#")[1]) // TO DO: edit qui
+                    //.setType(propertyValueType.get().split("#")[1]) // TO DO: edit qui
                     .setReadOnly(true)
                     .setObservable(true)
                     .setOptionalProperties(metadata)

@@ -36,7 +36,7 @@ public final class BulbHolderDTOntology implements DTOntology {
                 "https://bhontology.com/ontology#manufacturer",
                 "https://www.w3.org/2001/XMLSchema#string"
         ),
-        "on", Pair.of(
+        "Bulb_on", Pair.of(
                 "https://bulbontology.com/ontology#on",
                 "https://www.w3.org/2001/XMLSchema#boolean"
         )

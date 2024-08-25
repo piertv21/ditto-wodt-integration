@@ -94,8 +94,8 @@ public class ThingUtils {
                         for (Map.Entry<String, JsonElement> entry : contextObj.entrySet()) {
                             String alias = entry.getKey();
                             String contextUrl = entry.getValue().getAsString();
-                            contextUrl = contextUrl.endsWith("#") ? contextUrl.substring(0, contextUrl.length() - 1) : contextUrl;
-                            contextUrl = !contextUrl.endsWith("/") ? contextUrl + "/" : contextUrl;
+                            //contextUrl = contextUrl.endsWith("#") ? contextUrl.substring(0, contextUrl.length() - 1) : contextUrl;
+                            //contextUrl = !contextUrl.endsWith("/") ? contextUrl + "/" : contextUrl;
                             addModelElement(contextExtensionsList, new ThingModelElement(alias, Optional.of(contextUrl), Optional.empty()));
                         }
                     }
