@@ -59,7 +59,7 @@ public class DittoThingListener extends Thread {
             e.printStackTrace();
         } finally {
             client.getClient().destroy();
-            woDTDigitalAdapter.stop();
+            woDTDigitalAdapter.stopAdapter();
         }
     }
     

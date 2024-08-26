@@ -28,39 +28,12 @@ public class CodiceDiProva {
 
 
 
-        /*// ottiene tutti gli attributi di una thing
-        thing.getAttributes().ifPresent(attributes -> {
-            attributes.forEach((attribute) -> {
-                System.out.println(attribute.getKey() + ": " + attribute.getValue().toString());
-            });
-        });
 
-        // ottiene tutte le proprietà di tutte le features di una thing
-        thing.getFeatures().ifPresent(features -> {
-            features.forEach((featureName) -> {
-                System.out.println("Feature: " + featureName.getId());
-                featureName.getProperties().ifPresent(properties -> {
-                    properties.forEach((property) -> {
-                        System.out.println(property.getKey() + ": " + property.getValue().toString());
-                    });
-                });
-                System.out.println("\n");
-            });
-        });
-        
-        // registra cambiamenti
-        client.twin().forId(ThingId.of("io.eclipseprojects.ditto:bulb-holder")).registerForThingChanges("my-changes", change -> {
-            System.out.println("Change received: " + change);
-        });
-        
-        // accesso a attributi e proprietà di features
-        System.out.println(
-            // get attributo
-            //thing.getAttributes().get().getField("manufacturer").get().getValue().asString()
 
-            // get proprietà featureName
-            //thing.getFeatures().get().getFeature("Bulb").get().getProperties().get().getField("on").get().getValue().toString()            
-        );*/
+
+
+
+
 
 
     /*
@@ -200,18 +173,6 @@ public class CodiceDiProva {
             default:
                 break;
         }
-    }
-
-    @Override
-    public void onAdapterStart() {
-        this.woDTWebServer.start();
-        configuration.getPlatformToRegister().forEach(platform ->
-                this.platformManagementInterface.registerToPlatform(platform, this.dtdManager.getDTD().toJson()));
-    }
-
-    @Override
-    public void onAdapterStop() {
-        this.platformManagementInterface.signalDigitalTwinDeletion();
     }
 
     @Override

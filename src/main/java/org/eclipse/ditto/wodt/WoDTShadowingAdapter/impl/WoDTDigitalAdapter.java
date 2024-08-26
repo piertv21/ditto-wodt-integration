@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.eclipse.ditto.client.changes.ThingChange;
 import org.eclipse.ditto.things.model.Thing;
@@ -105,11 +106,14 @@ public final class WoDTDigitalAdapter {
                 },
                 this.platformManagementInterface
         );
-        this.woDTWebServer.start();
-        /* TO DO: configuration.getPlatformToRegister().forEach(platform ->
-                this.platformManagementInterface.registerToPlatform(platform, this.dtdManager.getDTD().toJson()));*/
-        
         this.dittoClientThread = new DittoThingListener(this);
+        this.startAdapter();
+    }
+
+    private void startAdapter() {
+        this.woDTWebServer.start();
+        /* this.configuration.getPlatformToRegister().forEach(platform ->
+                this.platformManagementInterface.registerToPlatform(platform, this.dtdManager.getDTD().toJson())); */
         dittoClientThread.start();
     }
 
@@ -163,13 +167,15 @@ public final class WoDTDigitalAdapter {
                     .filter(p -> p.getElement().equals(attribute.getKey().toString()))
                     .findFirst()
                     .orElse(null);
-                configuration.getOntology().convertPropertyValue(
-                    property.getElement(),
-                    attribute.getValue().asString() // TO DO: edit
-                ).ifPresent(triple ->
-                        this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
-                );
-                this.dtdManager.addProperty(property.getElement());
+                if(property != null) {
+                    configuration.getOntology().convertPropertyValue(
+                        property.getElement(),
+                        attribute.getValue().asString() // TO DO: edit
+                    ).ifPresent(triple ->
+                            this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                    );
+                    this.dtdManager.addProperty(property.getElement());
+                }                
             });
         });
 
@@ -236,7 +242,7 @@ public final class WoDTDigitalAdapter {
             });*/
     }
 
-    public void stop() {
+    public void stopAdapter() {
         this.platformManagementInterface.signalDigitalTwinDeletion();
         this.dittoClientThread.stopThread();
     }
@@ -244,19 +250,90 @@ public final class WoDTDigitalAdapter {
     public void onThingChange(ThingChange change) {
         System.out.println(change);
 
-        // CUD Attributi
-        // CUD Features
-
         switch (change.getAction()) {
             case CREATED:
-                // TO DO
+                if(change.getThing().get().getAttributes().isPresent()) { // Attributes creation - finished
+                    change.getThing().get().getAttributes().get().forEach((attribute) -> {
+                        ThingModelElement prop = this.propertiesList.stream()
+                            .filter(p -> p.getElement().equals(attribute.getKey().toString()))
+                            .findFirst()
+                            .orElse(null);
+                        if(prop != null) {
+                            configuration.getOntology().convertPropertyValue(
+                                prop.getElement(),
+                                attribute.getValue().asString() // TO DO: edit
+                            ).ifPresent(triple ->
+                                    this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                            );
+                            this.dtdManager.addProperty(prop.getElement());
+                        }
+                    });
+                }
+                if(change.getThing().get().getFeatures().isPresent()) { // Features creation (create all feature properties) - finished
+                    change.getThing().get().getFeatures().get().forEach((featureName) -> {
+                        featureName.getProperties().ifPresent(properties -> {
+                            properties.forEach((property) -> {
+                                List<String> subProperties = extractSubPropertiesNames(property.getValue().toString()); // Check for subproperties
+                                if(!subProperties.isEmpty()) {
+                                    subProperties.forEach(subProperty -> {
+                                        ThingModelElement featureProp = this.propertiesList.stream()
+                                            .filter(p -> p.getElement().equals(property.getKey().toString() + "_" + subProperty))
+                                            .filter(p -> p.getValue().get().equals(featureName.getId()))
+                                            .findFirst()
+                                            .orElse(null);
+                                        String fullPropertyName = featureProp.getValue().get() + "_" + property.getKey() + "_" + subProperty;
+                                        configuration.getOntology().convertPropertyValue(
+                                            fullPropertyName,
+                                            extractSubPropertyValue(property.getValue().toString(), subProperty) // TO DO: edit
+                                        ).ifPresent(triple ->
+                                            this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                                        );
+                                        this.dtdManager.addProperty(fullPropertyName);
+                                    });
+                                } else {
+                                    ThingModelElement featureProp = this.propertiesList.stream()
+                                        .filter(p -> p.getElement().equals(property.getKey().toString()))
+                                        .filter(p -> p.getValue().get().equals(featureName.getId()))
+                                        .findFirst()
+                                        .orElse(null);
+                                    String fullPropertyName = featureProp.getValue().get() + "_" + property.getKey().toString();
+                                    configuration.getOntology().convertPropertyValue(
+                                        fullPropertyName,
+                                        property.getValue().toString() // TO DO: edit
+                                    ).ifPresent(triple ->
+                                        this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                                    );
+                                    this.dtdManager.addProperty(fullPropertyName);
+                                }
+                            });
+                        });
+                    });
+                }
                 break;
             case DELETED:
-                if(change.getPath().toString().contains("attributes")) {
-                    // TO DO
+                String elementToDelete = change.getPath().toString().split("/")[2];
+                if(change.getPath().toString().contains("attributes")) { // Attributes deletion - finished                    
+                    this.configuration
+                        .getOntology()
+                        .obtainProperty(elementToDelete)
+                        .ifPresent(this.dtkgEngine::removeProperty);
+                    this.dtdManager.removeProperty(elementToDelete);
                 }
-                if(change.getPath().toString().contains("features")) {
-                    // TO DO
+                if(change.getPath().toString().contains("features")) { // Entire feature deletion (all feature properties) - not finished
+                    List<ThingModelElement> matchingProps = this.propertiesList.stream()
+                        .filter(p -> p.getValue().isPresent() && p.getValue().get().equals(elementToDelete))
+                        .collect(Collectors.toList());
+                    matchingProps.forEach(
+                        prop -> {
+                            String fullPorpertyName = prop.getValue().get() + "_" + prop.getElement();
+                            this.configuration
+                                .getOntology()
+                                .obtainProperty(fullPorpertyName)
+                                .ifPresent(this.dtkgEngine::removeProperty);
+                            this.dtdManager.removeProperty(fullPorpertyName);
+                        }
+                    );
+                    // TO DO: Remove events and actions realted to the feature
                 }
                 break;
             case UPDATED: // Aggiornamento valori attributi e features
