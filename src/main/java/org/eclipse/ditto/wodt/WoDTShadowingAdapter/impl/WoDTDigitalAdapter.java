@@ -40,11 +40,11 @@ public final class WoDTDigitalAdapter {
     private final PlatformManagementInterface platformManagementInterface;
     private final WoDTDigitalAdapterConfiguration configuration;
 
-    private DittoBase dittoBase;
-    private DittoThingListener dittoClientThread;
-    private List<ThingModelElement> propertiesList;
-    private List<ThingModelElement> actionsList;
-    private List<ThingModelElement> eventsList;
+    private final DittoBase dittoBase;
+    private final DittoThingListener dittoClientThread;
+    private final List<ThingModelElement> propertiesList;
+    private final List<ThingModelElement> actionsList;
+    private final List<ThingModelElement> eventsList;
 
     // TO DO: ottimizzare al meglio il codice evitando ripetizioni
 
@@ -95,7 +95,7 @@ public final class WoDTDigitalAdapter {
                 this.dtdManager,
                 (actionName, body) -> {
                     try {
-                        //publishDigitalActionWldtEvent(actionName, body); // TO DO: cambia qui, inviare msg in base all'actionName e body
+                        //publishDigitalActionWldtEvent(actionName, body); // TO DO: RIMUOVI
                         return true;
                     } catch (Exception e) {
                         Logger.getLogger(WoDTDigitalAdapter.class.getName())
@@ -113,6 +113,11 @@ public final class WoDTDigitalAdapter {
         dittoClientThread.start();
     }
 
+    /*
+     * Extract the names of the subproperties of a given property.
+     * e.g. {"subproperty1": "value1", "subproperty2": "value2"}
+     * returns ["subproperty1", "subproperty2"]
+     */
     private List<String> extractSubPropertiesNames(String jsonProperty) {
         List<String> subProperties = new ArrayList<>();
         ObjectMapper objectMapper = new ObjectMapper();
@@ -131,6 +136,11 @@ public final class WoDTDigitalAdapter {
         return subProperties;
     }
 
+    /*
+     * Extract the value of a subproperty of a given property.
+     * e.g. {"subproperty1": "value1", "subproperty2": "value2"}
+     * returns "value1" if key = "subproperty1"
+     */
     public static String extractSubPropertyValue(String jsonValue, String key) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -146,7 +156,7 @@ public final class WoDTDigitalAdapter {
     }
 
     private void syncWithDittoThing(Thing thing, WoDTDigitalAdapterConfiguration configuration) {
-        // PROPERTIES (Thing Attributes)
+        // PROPERTIES (Thing Attributes) - finished
         thing.getAttributes().ifPresent(attributes -> {
             attributes.forEach((attribute) -> {
                 ThingModelElement property = this.propertiesList.stream()
@@ -155,7 +165,7 @@ public final class WoDTDigitalAdapter {
                     .orElse(null);
                 configuration.getOntology().convertPropertyValue(
                     property.getElement(),
-                    attribute.getValue().asString()
+                    attribute.getValue().asString() // TO DO: edit
                 ).ifPresent(triple ->
                         this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                 );
@@ -166,7 +176,7 @@ public final class WoDTDigitalAdapter {
         // PROPERTIES, ACTIONS, EVENTS (from Thing Features)
         thing.getFeatures().ifPresent(features -> {
             features.forEach((featureName) -> {
-                featureName.getProperties().ifPresent(properties -> {
+                featureName.getProperties().ifPresent(properties -> { // - finished
                     properties.forEach((property) -> {
                         List<String> subProperties = extractSubPropertiesNames(property.getValue().toString()); // Check for subproperties
                         if(!subProperties.isEmpty()) {
@@ -179,7 +189,7 @@ public final class WoDTDigitalAdapter {
                                 String fullPropertyName = featureProperty.getValue().get() + "_" + property.getKey() + "_" + subProperty;
                                 configuration.getOntology().convertPropertyValue(
                                     fullPropertyName,
-                                    extractSubPropertyValue(property.getValue().toString(), subProperty)
+                                    extractSubPropertyValue(property.getValue().toString(), subProperty) // TO DO: edit
                                 ).ifPresent(triple ->
                                     this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                                 );
@@ -194,7 +204,7 @@ public final class WoDTDigitalAdapter {
                             String fullPropertyName = featureProperty.getValue().get() + "_" + property.getKey().toString();
                             configuration.getOntology().convertPropertyValue(
                                 fullPropertyName,
-                                property.getValue().toString()
+                                property.getValue().toString() // TO DO: edit
                             ).ifPresent(triple ->
                                 this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                             );
@@ -202,19 +212,28 @@ public final class WoDTDigitalAdapter {
                         }
                     });
                 });
+
+                // TO DO: Add Feature actions
+
+                // TO DO: Add Feature events
             });
         });
 
         // ACTIONS (Thing Actions)
-        this.actionsList.stream()
-            .filter(action -> action.getValue().isEmpty()) // Thing Action = no associated value
+        /*this.actionsList.stream()
+            .filter(action -> action.getValue().isEmpty())
             .forEach(action -> {                
                 this.dtdManager.addAction(action.getElement());
                 this.dtkgEngine.addActionId(action.getElement());
             });
 
-        // EVENTS (Thing Events)
-        // TO DO
+        // TO DO: EVENTS (Thing Events)
+        this.eventsList.stream()
+            .filter(event -> event.getValue().isEmpty())
+            .forEach(event -> {
+                this.dtdManager.addEvent(event.getElement());
+                this.dtkgEngine.addEvent(event.getElement());
+            });*/
     }
 
     public void stop() {
@@ -233,40 +252,65 @@ public final class WoDTDigitalAdapter {
                 // TO DO
                 break;
             case DELETED:
-                // TO DO
+                if(change.getPath().toString().contains("attributes")) {
+                    // TO DO
+                }
+                if(change.getPath().toString().contains("features")) {
+                    // TO DO
+                }
                 break;
-            case UPDATED:
-                if (change.getThing().get().getAttributes().isPresent()) {  // Update Thing Attributes
+            case UPDATED: // Aggiornamento valori attributi e features
+                if (change.getThing().get().getAttributes().isPresent()) {  // Update Thing Attributes - finished
                     change.getThing().get().getAttributes().get().forEach((attribute) -> {
                         ThingModelElement prop = this.propertiesList.stream()
                             .filter(p -> p.getElement().equals(attribute.getKey().toString()))
                             .findFirst()
                             .orElse(null);
                         configuration.getOntology().convertPropertyValue(
-                            attribute.getKey().toString(),
-                            attribute.getValue().asString()
+                            prop.getElement(),
+                            attribute.getValue().asString() // TO DO: edit
                         ).ifPresent(triple ->
                                 this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                         );
-                        this.dtdManager.addProperty(attribute.getKey().toString());
+                        this.dtdManager.addProperty(prop.getElement());
                     });
                 }
-                if (change.getThing().get().getFeatures().isPresent()) {    // Update Thing Features (Properties)
+                if (change.getThing().get().getFeatures().isPresent()) {    // Update Thing Features (Properties) - finished
                     change.getThing().get().getFeatures().get().forEach((featureName) -> {
                         featureName.getProperties().ifPresent(properties -> {
                             properties.forEach((property) -> {
-                                ThingModelElement featureProp = this.propertiesList.stream()
-                                    .filter(p -> p.getElement().equals(property.getKey().toString()))
-                                    .filter(p -> p.getValue().get().equals(featureName.getId()))
-                                    .findFirst()
-                                    .orElse(null);
-                                configuration.getOntology().convertPropertyValue(
-                                    property.getKey().toString(),
-                                    property.getValue().toString()
-                                ).ifPresent(triple ->
-                                    this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
-                                );
-                                this.dtdManager.addProperty(property.getKey().toString());
+                                List<String> subProperties = extractSubPropertiesNames(property.getValue().toString()); // Check for subproperties
+                                if(!subProperties.isEmpty()) {
+                                    subProperties.forEach(subProperty -> {
+                                        ThingModelElement featureProp = this.propertiesList.stream()
+                                            .filter(p -> p.getElement().equals(property.getKey().toString() + "_" + subProperty))
+                                            .filter(p -> p.getValue().get().equals(featureName.getId()))
+                                            .findFirst()
+                                            .orElse(null);
+                                        String fullPropertyName = featureProp.getValue().get() + "_" + property.getKey() + "_" + subProperty;
+                                        configuration.getOntology().convertPropertyValue(
+                                            fullPropertyName,
+                                            extractSubPropertyValue(property.getValue().toString(), subProperty) // TO DO: edit
+                                        ).ifPresent(triple ->
+                                            this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                                        );
+                                        this.dtdManager.addProperty(fullPropertyName);
+                                    });
+                                } else {
+                                    ThingModelElement featureProp = this.propertiesList.stream()
+                                        .filter(p -> p.getElement().equals(property.getKey().toString()))
+                                        .filter(p -> p.getValue().get().equals(featureName.getId()))
+                                        .findFirst()
+                                        .orElse(null);
+                                    String fullPropertyName = featureProp.getValue().get() + "_" + property.getKey().toString();
+                                    configuration.getOntology().convertPropertyValue(
+                                        fullPropertyName,
+                                        property.getValue().toString() // TO DO: edit
+                                    ).ifPresent(triple ->
+                                        this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                                    );
+                                    this.dtdManager.addProperty(fullPropertyName);
+                                }
                             });
                         });
                     });

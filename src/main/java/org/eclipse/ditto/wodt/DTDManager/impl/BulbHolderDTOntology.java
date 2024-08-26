@@ -51,11 +51,11 @@ public final class BulbHolderDTOntology implements DTOntology {
 
     private static final Map<String, String> actionMap = Map.of(
         "toggle-plug-cord-attachment", "https://bhontology.com/ontology#TogglePlugCordAttachment",
-        "toggle", "https://bulbontology.com/ontology#Toggle"
+        "Bulb_toggle", "https://bulbontology.com/ontology#Toggle"
     );
 
     private static final Map<String, String> eventMap = Map.of(
-        "burnt-out-bulb", "https://bulbontology.com/ontology#BurntOutBulb",
+        "Bulb_burnt-out-bulb", "https://bulbontology.com/ontology#BurntOutBulb",
         "overheating", "https://bhontology.com/ontology#Overheating"
     );
 

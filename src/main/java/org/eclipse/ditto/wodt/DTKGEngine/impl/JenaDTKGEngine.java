@@ -199,4 +199,14 @@ public class JenaDTKGEngine implements DTKGEngine {
         modelConsumer.accept(this.dtkgModel);
         this.dtkgModel.leaveCriticalSection();
     }
+
+    @Override
+    public void addEvent(String event) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean removeEvent(String event) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

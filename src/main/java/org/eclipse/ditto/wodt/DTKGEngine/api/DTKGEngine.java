@@ -71,6 +71,16 @@ public interface DTKGEngine extends DTKGEngineReader {
     */
     boolean removeActionId(String actionId);
 
+    /*
+     * Add an event to the Digital Twin Knowledge Graph.
+     */
+    void addEvent(String event);
+
+    /**
+     * Remove an event from the Digital Twin Knowledge Graph.
+     */
+    boolean removeEvent(String event);
+
     /**
      * Add a {@link DTKGObserver} that will be notified for each DTKG update.
     * @param observer the observer to add.
