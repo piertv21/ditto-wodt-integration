@@ -38,10 +38,12 @@ import io.github.sanecity.wot.thing.ExposedThing;
 import io.github.sanecity.wot.thing.Thing;
 import io.github.sanecity.wot.thing.Type;
 import io.github.sanecity.wot.thing.action.ThingAction;
+import io.github.sanecity.wot.thing.event.ThingEvent;
 import io.github.sanecity.wot.thing.form.Form;
 import io.github.sanecity.wot.thing.form.Operation;
 import io.github.sanecity.wot.thing.property.ExposedThingProperty;
 import io.github.sanecity.wot.thing.property.ThingProperty;
+import io.github.sanecity.wot.thing.schema.VariableDataSchema;
 
 /**
  * This class provide an implementation of the {@link io.github.webbasedwodt.application.component.DTDManager} using
@@ -59,7 +61,7 @@ public class WoTDTDManager implements DTDManager {
     private final Map<String, ThingProperty<Object>> properties;
     private final Map<String, ThingProperty<Object>> relationships;
     private final Map<String, ThingAction<Object, Object>> actions;
-    // TO DO: private final Map<String, ThingAction<Object, Object>> events;
+    private final Map<String, ThingEvent<Object>> events;
 
     private final String baseUrl;
     private final List<ThingModelElement> extractedContextExtensionsList;
@@ -71,8 +73,9 @@ public class WoTDTDManager implements DTDManager {
     private final static String FEATURE_URL = "/features/{featureId}";
     private final static String PROPERTY_READ_URL = FEATURE_URL + "/properties/{propertyPath}";
     private final static String ACTION_URL = "/inbox/messages/";
+    private final static String EVENT_URL = "/outbox/messages/";
 
-    // TO DO: migliorare diverse parti del codice (brutte o ripeetitive)
+    // TO DO: migliorare diverse parti del codice (brutte o ripetitive)
 
     /**
      * Default constructor.
@@ -107,6 +110,7 @@ public class WoTDTDManager implements DTDManager {
         this.properties = new HashMap<>();
         this.relationships = new HashMap<>();
         this.actions = new HashMap<>();
+        this.events = new HashMap<>();
     }
 
     @Override
@@ -163,6 +167,7 @@ public class WoTDTDManager implements DTDManager {
             this.relationships.forEach(thingDescription::addProperty);
             this.actions.forEach((rawActionName, action) ->
                     thingDescription.addAction(rawActionName, action, () -> { }));
+            this.events.forEach((rawEventName, event) -> thingDescription.addEvent(rawEventName, event));
 
             // Add Properties & Relationships affordances
             thingDescription.getProperties().forEach((name, property) -> {
@@ -226,6 +231,36 @@ public class WoTDTDManager implements DTDManager {
                 action.addForm(new Form.Builder()
                         .addOp(Operation.INVOKE_ACTION)
                         .setHref(href)
+                        .build());
+            });
+
+            // Add Events affordances
+            thingDescription.getEvents().forEach((name, event) -> {
+                String[] splitEventName = splitStringAtFirstUnderscore(name);
+                ThingModelElement evt;
+                if(splitEventName != null) {
+                    evt = extractedEventsList.stream()
+                        .filter(e -> e.getElement().equals(splitEventName[1]))
+                        .filter(e -> e.getValue().get().equals(splitEventName[0]))
+                        .findFirst()
+                        .orElse(null);
+                } else {
+                    evt = extractedEventsList.stream()
+                        .filter(e -> e.getElement().equals(name))
+                        .findFirst()
+                        .orElse(null);
+                }
+                String href = baseUrl;
+                if(evt.getValue().isPresent()) {
+                    href += FEATURE_URL.replace("{featureId}", evt.getValue().get())
+                                + EVENT_URL + splitEventName[1];
+                } else {
+                    href += EVENT_URL + name;
+                }
+                event.addForm(new Form.Builder()
+                        .addOp(Operation.SUBSCRIBE_EVENT)
+                        .setHref(href)
+                        .setSubprotocol("sse")
                         .build());
             });
             return thingDescription;
@@ -314,14 +349,24 @@ public class WoTDTDManager implements DTDManager {
                 .build());
     }
 
+    private Optional<ThingEvent<Object>> createThingDescriptionEvent(final String eventData) {
+        return Optional.of(new ThingEvent.Builder() // TO DO: edit
+                .setData(
+                    new VariableDataSchema.Builder()
+                                .setType("integer")
+                                .build()
+                )
+                .build());
+    }
+
     @Override
-    public void addEvent(String rawEventName) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void addEvent(String rawEventName, String rawEventPayload) {
+        this.createThingDescriptionEvent(rawEventName).ifPresent(event -> this.events.put(rawEventName, event));
     }
 
     @Override
     public boolean removeEvent(String rawEventName) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return this.events.remove(rawEventName) != null;
     }
 
     /**

@@ -168,7 +168,7 @@ public class JenaDTKGEngine implements DTKGEngine {
 
     private void addProperty(final Resource resourceToAdd, final Pair<Property, Node> predicate) {
         final String propertyUri = predicate.getLeft().getUri().orElse("");
-        final org.apache.jena.rdf.model.Property property = this.dtkgModel.createProperty(propertyUri); // TO DO potrebbe dare errore
+        final org.apache.jena.rdf.model.Property property = this.dtkgModel.createProperty(propertyUri);
         if (predicate.getRight() instanceof Property) {
             resourceToAdd.addProperty(
                     property,
@@ -202,7 +202,13 @@ public class JenaDTKGEngine implements DTKGEngine {
 
     @Override
     public void addEvent(String event) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        this.writeModel(model ->
+                this.digitalTwinResource.addLiteral(
+                        this.dtkgModel.createProperty(WoDTVocabulary.AVAILABLE_ACTION_ID.getUri()),
+                        event
+                )
+        );
+        this.notifyObservers();
     }
 
     @Override

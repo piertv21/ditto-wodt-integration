@@ -1,6 +1,7 @@
 package org.eclipse.ditto.wodt.DTDManager.impl;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -140,12 +141,9 @@ public final class FloorLampDTOntology implements DTOntology {
         "Status-LED_switch-on-for-duration", "https://switchableontology.com/ontology#Status-LED_switch-on-for-duration"
     );
 
-    private static final Map<String, String> eventMap = Map.of(
-        "burnt-out-bulb", "https://bulbontology.com/ontology#BurntOutBulb",
-        "overheating", "https://bhontology.com/ontology#Overheating"
+    private static final List<String> eventList = List.of(
+        "PowerConsumptionAwareness_current-power-consumption", "SmokeDetection_smoke-detected", "SmokeDetection_smoke-cleared"
     );
-
-    // TO DO: aggiungi eventMap + funzioni sotto
 
     @Override
     public String getDigitalTwinType() {

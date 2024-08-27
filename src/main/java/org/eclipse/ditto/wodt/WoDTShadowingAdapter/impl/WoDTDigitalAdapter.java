@@ -228,6 +228,13 @@ public final class WoDTDigitalAdapter {
                         });
 
                     // TO DO: Add Feature events
+                    this.eventsList.stream()
+                        .filter(event -> event.getValue().isPresent() && event.getValue().get().equals(featureName.getId()))
+                        .forEach(event -> {
+                            String fullEventName = featureName.getId() + "_" + event.getElement();
+                            this.dtdManager.addEvent(fullEventName, event.getAdditionalData().orElse(""));
+                            //this.dtkgEngine.addEvent(fullEventName);
+                        });
                 });
             });
         });
@@ -241,12 +248,12 @@ public final class WoDTDigitalAdapter {
             });
 
         // TO DO: EVENTS (Thing Events)
-        /*this.eventsList.stream()
+        this.eventsList.stream()
             .filter(event -> event.getValue().isEmpty())
             .forEach(event -> {
-                this.dtdManager.addEvent(event.getElement());
-                this.dtkgEngine.addEvent(event.getElement());
-            });*/
+                this.dtdManager.addEvent(event.getElement(), event.getAdditionalData().orElse(""));
+                //this.dtkgEngine.addEvent(event.getElement());
+            });
     }
 
     public void stopAdapter() {
