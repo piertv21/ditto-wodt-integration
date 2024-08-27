@@ -67,8 +67,9 @@ public class WoTDTDManager implements DTDManager {
     private List<ThingModelElement> extractedActionsList;
     private List<ThingModelElement> extractedEventsList;
 
-    private final static String ATTRIBUTE_READ_URL = "/attributes/{attributePath}";
-    private final static String PROPERTY_READ_URL = "/features/{featureId}/properties/{propertyPath}";
+    private final static String ATTRIBUTE_URL = "/attributes/{attributePath}";
+    private final static String FEATURE_URL = "/features/{featureId}";
+    private final static String PROPERTY_READ_URL = FEATURE_URL + "/properties/{propertyPath}";
     private final static String ACTION_URL = "/inbox/messages/";
 
     // TO DO: migliorare diverse parti del codice (brutte o ripeetitive)
@@ -162,14 +163,8 @@ public class WoTDTDManager implements DTDManager {
             this.relationships.forEach(thingDescription::addProperty);
             this.actions.forEach((rawActionName, action) ->
                     thingDescription.addAction(rawActionName, action, () -> { }));
-            thingDescription.getActions().forEach((name, action) ->
-                action.addForm(new Form.Builder()
-                        .addOp(Operation.INVOKE_ACTION)
-                        .setHref(baseUrl + ACTION_URL + name) // TO DO: edit qui (per azioni sulle feature)
-                        .build())
-            );
 
-            // Add affordances to properties (& relationships)
+            // Add Properties & Relationships affordances
             thingDescription.getProperties().forEach((name, property) -> {
                 if(!name.equals("snapshot")) {
                     String[] splitPropertyName = splitStringAtFirstUnderscore(name);
@@ -191,7 +186,7 @@ public class WoTDTDManager implements DTDManager {
                         href += PROPERTY_READ_URL.replace("{featureId}", prop.getValue().get())
                             .replace("{propertyPath}", splitPropertyName[1].replace("_", "/"));
                     } else {
-                        href += ATTRIBUTE_READ_URL.replace("{attributePath}", name);
+                        href += ATTRIBUTE_URL.replace("{attributePath}", name);
                     }
                     property.addForm(new Form.Builder()
                             .addOp(Operation.READ_PROPERTY)
@@ -204,13 +199,42 @@ public class WoTDTDManager implements DTDManager {
                             .build());
                 }
             });
+
+            // Add Actions affordances
+            thingDescription.getActions().forEach((name, action) -> {
+                String[] splitActionName = splitStringAtFirstUnderscore(name);
+                ThingModelElement act;
+                if(splitActionName != null) {
+                    act = extractedActionsList.stream()
+                        .filter(a -> a.getElement().equals(splitActionName[1]))
+                        .filter(a -> a.getValue().get().equals(splitActionName[0]))
+                        .findFirst()
+                        .orElse(null);
+                } else {
+                    act = extractedActionsList.stream()
+                        .filter(a -> a.getElement().equals(name))
+                        .findFirst()
+                        .orElse(null);
+                }
+                String href = baseUrl;
+                if(act.getValue().isPresent()) {
+                    href += FEATURE_URL.replace("{featureId}", act.getValue().get())
+                                + ACTION_URL + splitActionName[1];
+                } else {
+                    href += ACTION_URL + name;
+                }
+                action.addForm(new Form.Builder()
+                        .addOp(Operation.INVOKE_ACTION)
+                        .setHref(href)
+                        .build());
+            });
             return thingDescription;
         } catch (WotException e) {
             throw new IllegalStateException("Impossible to create the WoT DTD Manager in the current state", e);
         }
     }
 
-    public String[] splitStringAtFirstUnderscore(String input) {
+    private String[] splitStringAtFirstUnderscore(String input) {
         int underscoreIndex = input.indexOf('_');
         if (underscoreIndex != -1) {
             String firstPart = input.substring(0, underscoreIndex);

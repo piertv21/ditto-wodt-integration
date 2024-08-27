@@ -128,8 +128,16 @@ public final class FloorLampDTOntology implements DTOntology {
     );
 
     private static final Map<String, String> actionMap = Map.of(
-        "toggle-plug-cord-attachment", "https://bhontology.com/ontology#TogglePlugCordAttachment",
-        "toggle", "https://bulbontology.com/ontology#Toggle"
+        "switch-all-spots", "https://flontology.com/ontology#SwitchAllSpots",
+        "switch-all-spots-on-for-duration", "https://flontology.com/ontology#SwitchAllSpotsOnForDuration",
+        "Spot1_toggle", "https://switchableontology.com/ontology#Spot1_toggle",
+        "Spot1_switch-on-for-duration", "https://switchableontology.com/ontology#Spot1_switch-on-for-duration",
+        "Spot2_toggle", "https://switchableontology.com/ontology#Spot2_toggle",
+        "Spot2_switch-on-for-duration", "https://switchableontology.com/ontology#Spot2_switch-on-for-duration",
+        "Spot3_toggle", "https://switchableontology.com/ontology#Spot3_toggle",
+        "Spot3_switch-on-for-duration", "https://switchableontology.com/ontology#Spot3_switch-on-for-duration",
+        "Status-LED_toggle", "https://switchableontology.com/ontology#Status-LED_toggle",
+        "Status-LED_switch-on-for-duration", "https://switchableontology.com/ontology#Status-LED_switch-on-for-duration"
     );
 
     private static final Map<String, String> eventMap = Map.of(

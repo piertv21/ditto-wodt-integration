@@ -217,16 +217,23 @@ public final class WoDTDigitalAdapter {
                             this.dtdManager.addProperty(fullPropertyName);
                         }
                     });
+
+                    // TO DO: Add Feature actions
+                    this.actionsList.stream()
+                        .filter(action -> action.getValue().isPresent() && action.getValue().get().equals(featureName.getId()))
+                        .forEach(action -> {
+                            String fullActionName = featureName.getId() + "_" + action.getElement();
+                            this.dtdManager.addAction(fullActionName);
+                            this.dtkgEngine.addActionId(fullActionName);
+                        });
+
+                    // TO DO: Add Feature events
                 });
-
-                // TO DO: Add Feature actions
-
-                // TO DO: Add Feature events
             });
         });
 
         // ACTIONS (Thing Actions)
-        /*this.actionsList.stream()
+        this.actionsList.stream()
             .filter(action -> action.getValue().isEmpty())
             .forEach(action -> {                
                 this.dtdManager.addAction(action.getElement());
@@ -234,7 +241,7 @@ public final class WoDTDigitalAdapter {
             });
 
         // TO DO: EVENTS (Thing Events)
-        this.eventsList.stream()
+        /*this.eventsList.stream()
             .filter(event -> event.getValue().isEmpty())
             .forEach(event -> {
                 this.dtdManager.addEvent(event.getElement());
@@ -307,6 +314,10 @@ public final class WoDTDigitalAdapter {
                                 }
                             });
                         });
+
+                        // TO DO: Add feature actions
+
+                        // TO DO: Add feature events
                     });
                 }
                 break;
@@ -333,7 +344,10 @@ public final class WoDTDigitalAdapter {
                             this.dtdManager.removeProperty(fullPorpertyName);
                         }
                     );
-                    // TO DO: Remove events and actions realted to the feature
+
+                    // TO DO: Remove feature actions
+
+                    // TO DO: Remove feature events
                 }
                 break;
             case UPDATED: // Aggiornamento valori attributi e features
