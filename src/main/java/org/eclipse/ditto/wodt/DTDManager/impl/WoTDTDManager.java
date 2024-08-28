@@ -1,21 +1,5 @@
 package org.eclipse.ditto.wodt.DTDManager.impl;
 
-/*
- * Copyright (c) 2023. Andrea Giulianelli
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +9,7 @@ import java.util.stream.Collectors;
 import org.eclipse.ditto.wodt.DTDManager.api.DTDManager;
 import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterfaceReader;
 import org.eclipse.ditto.wodt.common.ThingModelElement;
+import static org.eclipse.ditto.wodt.common.ThingUtils.extractDataFromThing;
 import org.eclipse.ditto.wodt.model.ontology.DTOntology;
 import org.eclipse.ditto.wodt.model.ontology.Property;
 import org.eclipse.ditto.wodt.model.ontology.WoDTVocabulary;
@@ -48,6 +33,15 @@ import io.github.sanecity.wot.thing.schema.VariableDataSchema;
 * a WoT Thing Description to implement the Digital Twin Descriptor.
 */
 public class WoTDTDManager implements DTDManager {
+
+    private static final int DITTO_PORT_NUMBER = 8080;    
+    private static final String BASE_URL = "http://localhost:" + DITTO_PORT_NUMBER + "/api/2/things/";
+    private static final String ATTRIBUTE_URL = "/attributes/{attributePath}";
+    private static final String FEATURE_URL = "/features/{featureId}";
+    private static final String PROPERTY_URL = FEATURE_URL + "/properties/{propertyPath}";
+    private static final String ACTION_URL = "/inbox/messages/";
+    private static final String EVENT_URL = "/outbox/messages/";
+
     private static final String THING_DESCRIPTION_CONTEXT = "https://www.w3.org/2019/wot/td/v1";
     private static final String VERSION = "1.0.0";
     private static final String SNAPSHOT_DTD_PROPERTY = "snapshot";
@@ -55,23 +49,18 @@ public class WoTDTDManager implements DTDManager {
     private final String physicalAssetId;
     private final DTOntology ontology;
     private final int portNumber;
+    private final String dittoThingId;
     private final PlatformManagementInterfaceReader platformManagementInterfaceReader;
+
     private final Map<String, ThingProperty<Object>> properties;
     private final Map<String, ThingProperty<Object>> relationships;
     private final Map<String, ThingAction<Object, Object>> actions;
     private final Map<String, ThingEvent<Object>> events;
-
-    private final String baseUrl;
-    private final List<ThingModelElement> extractedContextExtensionsList;
+    
+    private List<ThingModelElement> extractedContextExtensionsList;
     private List<ThingModelElement> extractedPropertiesList;
     private List<ThingModelElement> extractedActionsList;
-    private List<ThingModelElement> extractedEventsList;
-
-    private final static String ATTRIBUTE_URL = "/attributes/{attributePath}";
-    private final static String FEATURE_URL = "/features/{featureId}";
-    private final static String PROPERTY_READ_URL = FEATURE_URL + "/properties/{propertyPath}";
-    private final static String ACTION_URL = "/inbox/messages/";
-    private final static String EVENT_URL = "/outbox/messages/";
+    private List<ThingModelElement> extractedEventsList;    
 
     // TO DO: migliorare diverse parti del codice (brutte o ripetitive)
 
@@ -89,26 +78,27 @@ public class WoTDTDManager implements DTDManager {
         final String physicalAssetId,
         final int portNumber,
         final PlatformManagementInterfaceReader platformManagementInterfaceReader,
-        final List<ThingModelElement> extractedContextExtensionsList,
-        final List<ThingModelElement> extractedPropertiesList,
-        final List<ThingModelElement> extractedActionsList,
-        final List<ThingModelElement> extractedEventsList,
-        final String baseUrl
+        final org.eclipse.ditto.things.model.Thing dittoThing
     ) {
-        this.baseUrl = baseUrl;
+        this.dittoThingId = dittoThing.getEntityId().get().toString();
+        this.extractThingModelData(dittoThing);        
         this.digitalTwinUri = digitalTwinUri;
         this.ontology = ontology;
         this.physicalAssetId = physicalAssetId;
         this.portNumber = portNumber;
-        this.extractedContextExtensionsList = extractedContextExtensionsList;
-        this.extractedPropertiesList = extractedPropertiesList;
-        this.extractedActionsList = extractedActionsList;
-        this.extractedEventsList = extractedEventsList;
         this.platformManagementInterfaceReader = platformManagementInterfaceReader;
         this.properties = new HashMap<>();
         this.relationships = new HashMap<>();
         this.actions = new HashMap<>();
         this.events = new HashMap<>();
+    }
+
+    private void extractThingModelData(final org.eclipse.ditto.things.model.Thing dittoThing) {
+        List<List<ThingModelElement>> extractDataFromThing = extractDataFromThing(dittoThing);
+        this.extractedContextExtensionsList = extractDataFromThing.get(0);
+        this.extractedPropertiesList = extractDataFromThing.get(1);
+        this.extractedActionsList = extractDataFromThing.get(2);
+        this.extractedEventsList = extractDataFromThing.get(3);
     }
 
     @Override
@@ -179,9 +169,9 @@ public class WoTDTDManager implements DTDManager {
                             .findFirst()
                             .orElse(null);
                     }
-                    String href = baseUrl;
+                    String href = BASE_URL + this.dittoThingId;
                     if(prop.getValue().isPresent()) {
-                        href += PROPERTY_READ_URL.replace("{featureId}", prop.getValue().get())
+                        href += PROPERTY_URL.replace("{featureId}", prop.getValue().get())
                             .replace("{propertyPath}", splitPropertyName[1].replace("_", "/"));
                     } else {
                         href += ATTRIBUTE_URL.replace("{attributePath}", name);
@@ -214,7 +204,7 @@ public class WoTDTDManager implements DTDManager {
                         .findFirst()
                         .orElse(null);
                 }
-                String href = baseUrl;
+                String href = BASE_URL + this.dittoThingId;
                 if(act.getValue().isPresent()) {
                     href += FEATURE_URL.replace("{featureId}", act.getValue().get())
                                 + ACTION_URL + splitActionName[1];
@@ -243,7 +233,7 @@ public class WoTDTDManager implements DTDManager {
                         .findFirst()
                         .orElse(null);
                 }
-                String href = baseUrl;
+                String href = BASE_URL + this.dittoThingId;
                 if(evt.getValue().isPresent()) {
                     href += FEATURE_URL.replace("{featureId}", evt.getValue().get())
                                 + EVENT_URL + splitEventName[1];
@@ -343,10 +333,10 @@ public class WoTDTDManager implements DTDManager {
     }
 
     private Optional<ThingEvent<Object>> createThingDescriptionEvent(final String eventData) {
-        return Optional.of(new ThingEvent.Builder() // TO DO: edit
+        return Optional.of(new ThingEvent.Builder()
                 .setData(
                     new VariableDataSchema.Builder()
-                                .setType("integer")
+                                .setType("integer " + eventData) // TO DO: edit
                                 .build()
                 )
                 .build());
@@ -360,6 +350,21 @@ public class WoTDTDManager implements DTDManager {
     @Override
     public boolean removeEvent(String rawEventName) {
         return this.events.remove(rawEventName) != null;
+    }
+
+    @Override
+    public List<ThingModelElement> getTMProperties() {
+        return List.copyOf(this.extractedPropertiesList);
+    }
+
+    @Override
+    public List<ThingModelElement> getTMActions() {
+        return List.copyOf(this.extractedActionsList);
+    }
+
+    @Override
+    public List<ThingModelElement> getTMEvents() {
+        return List.copyOf(this.extractedEventsList);
     }
 
     /**
@@ -382,6 +387,7 @@ public class WoTDTDManager implements DTDManager {
          * Obtain the url of the WoDT Digital Twins Platform.
         * @return the url
         */
+        @SuppressWarnings("unused")
         public String getHref() {
             return this.href;
         }
@@ -390,6 +396,7 @@ public class WoTDTDManager implements DTDManager {
          * Obtain the relationship of the link following the Web Linking Specification.
         * @return the relation of the link
         */
+        @SuppressWarnings("unused")
         public String getRel() {
             return this.rel;
         }

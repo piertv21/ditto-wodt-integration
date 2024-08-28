@@ -16,6 +16,10 @@
 
 package org.eclipse.ditto.wodt.DTDManager.api;
 
+import java.util.List;
+
+import org.eclipse.ditto.wodt.common.ThingModelElement;
+
 /**
  * This interface models the DTD Manager component of the Abstract Architecture.
 */
@@ -68,4 +72,19 @@ public interface DTDManager extends DTDManagerReader {
      * Remove an event from the DTD.
      */
     boolean removeEvent(String rawEventName);
+
+    /*
+     * Get the available properties of the Thing Model.
+     */
+    List<ThingModelElement> getTMProperties();
+
+    /*
+     * Get the available actions of the Thing Model.
+     */
+    List<ThingModelElement> getTMActions();
+
+    /*
+     * Get the available events of the Thing Model.
+     */
+    List<ThingModelElement> getTMEvents();
 }

@@ -26,7 +26,6 @@ public class DittoThingListener extends Thread {
     @Override
     public void run() {
         try {
-            // Listen Ditto Thing changes
             client.getClient().twin().startConsumption().thenAccept(v -> {
                 LOGGER.info("Subscribed for Ditto Thing changes");
                 client.getClient().twin().registerForThingChanges("my-changes", change -> {
@@ -34,29 +33,10 @@ public class DittoThingListener extends Thread {
                     this.woDTDigitalAdapter.onThingChange(change);
                 });
             });
-
-            // Listen all messages TO thing (Actions)
-            /*client.getClient().live().startConsumption().thenAccept(v -> {
-                System.out.println("Subscribed for live messages/commands/events");
-                client.getClient().live().registerForMessage("globalMessageHandler", "*", new Consumer<RepliableMessage<?, Object>>() {
-                    @Override
-                    public void accept(RepliableMessage<?, Object> message) {
-                        System.out.println("Received Message with subject " + message.getSubject());
-                        
-                        //this.woDTDigitalAdapter.onMessage(message);
-                        
-                        message.reply()
-                                .httpStatus(HttpStatus.IM_A_TEAPOT)
-                                .payload("Hello, I'm just a Teapot!")
-                                .send();
-                    }
-                });
-            });*/
-
-            // Keep the thread alive until stopThread() is called
+            
             latch.await();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (InterruptedException e) {
+            LOGGER.error("Error in DittoThingListener", e);
         } finally {
             client.getClient().destroy();
             woDTDigitalAdapter.stopAdapter();

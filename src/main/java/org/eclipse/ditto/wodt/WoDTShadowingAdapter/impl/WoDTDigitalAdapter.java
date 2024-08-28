@@ -19,8 +19,8 @@ import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.impl.WoDTWebServerImpl;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.api.WoDTDigitalAdapterConfiguration;
 import org.eclipse.ditto.wodt.common.DittoBase;
 import org.eclipse.ditto.wodt.common.ThingModelElement;
-import static org.eclipse.ditto.wodt.common.ThingUtils.extractDataFromThing;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -30,20 +30,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 */
 public final class WoDTDigitalAdapter {
 
-    private static final int DITTO_PORT_NUMBER = 8080;    
-    private static final String BASE_URL = "http://localhost:" + DITTO_PORT_NUMBER + "/api/2/things/";
-
     private final DTKGEngine dtkgEngine;
     private final DTDManager dtdManager;
     private final WoDTWebServer woDTWebServer;
     private final PlatformManagementInterface platformManagementInterface;
-    private final WoDTDigitalAdapterConfiguration configuration;
-
-    private final DittoBase dittoBase;
+    private final WoDTDigitalAdapterConfiguration configuration;    
     private final DittoThingListener dittoClientThread;
-    private final List<ThingModelElement> propertiesList;
-    private final List<ThingModelElement> actionsList;
-    private final List<ThingModelElement> eventsList;
 
     // TO DO: ottimizzare al meglio il codice evitando ripetizioni
 
@@ -57,19 +49,9 @@ public final class WoDTDigitalAdapter {
         final WoDTDigitalAdapterConfiguration configuration,
         final String dittoThingId
     ) {
+        Thing thing = getDittoThing(dittoThingId);
+
         this.configuration = configuration;
-        this.dittoBase = new DittoBase(); // TO DO: rimuovi se non usato sotto
-        Thing thing = dittoBase.getClient().twin()
-            .forId(ThingId.of(dittoThingId))
-            .retrieve()
-            .toCompletableFuture()
-            .join();
-
-        List<List<ThingModelElement>> result = extractDataFromThing(thing);
-        this.propertiesList = result.get(1);
-        this.actionsList = result.get(2);
-        this.eventsList = result.get(3);
-
         this.platformManagementInterface = new BasePlatformManagementInterface(
                 configuration.getDigitalTwinUri());
         this.dtkgEngine = new JenaDTKGEngine(configuration.getDigitalTwinUri());
@@ -79,15 +61,9 @@ public final class WoDTDigitalAdapter {
                 configuration.getPhysicalAssetId(),
                 configuration.getPortNumber(),
                 this.platformManagementInterface,
-                result.get(0),
-                this.propertiesList,
-                this.actionsList,
-                this.eventsList,
-                BASE_URL + dittoThingId
+                thing
         );
-
         this.syncWithDittoThing(thing, configuration);
-
         this.woDTWebServer = new WoDTWebServerImpl(
                 configuration.getPortNumber(),
                 this.dtkgEngine,
@@ -98,9 +74,17 @@ public final class WoDTDigitalAdapter {
         this.startAdapter();
     }
 
+    private Thing getDittoThing(String dittoThingId) {
+        return new DittoBase().getClient().twin()
+            .forId(ThingId.of(dittoThingId))
+            .retrieve()
+            .toCompletableFuture()
+            .join();
+    }
+
     private void startAdapter() {
         this.woDTWebServer.start();
-        /* this.configuration.getPlatformToRegister().forEach(platform ->
+        /* TO DO: this.configuration.getPlatformToRegister().forEach(platform ->
                 this.platformManagementInterface.registerToPlatform(platform, this.dtdManager.getDTD().toJson())); */
         dittoClientThread.start();
     }
@@ -110,7 +94,7 @@ public final class WoDTDigitalAdapter {
      * e.g. {"subproperty1": "value1", "subproperty2": "value2"}
      * returns ["subproperty1", "subproperty2"]
      */
-    private List<String> extractSubPropertiesNames(String jsonProperty) {
+    private List<String> extractSubPropertiesNames(final String jsonProperty) {
         List<String> subProperties = new ArrayList<>();
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -122,7 +106,7 @@ public final class WoDTDigitalAdapter {
                     subProperties.add(fieldName);
                 }
             }
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
             System.out.println("Error");
         }
         return subProperties;
@@ -133,7 +117,7 @@ public final class WoDTDigitalAdapter {
      * e.g. {"subproperty1": "value1", "subproperty2": "value2"}
      * returns "value1" if key = "subproperty1"
      */
-    public static String extractSubPropertyValue(String jsonValue, String key) {
+    public static String extractSubPropertyValue(final String jsonValue, final String key) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             JsonNode rootNode = objectMapper.readTree(jsonValue);
@@ -141,17 +125,17 @@ public final class WoDTDigitalAdapter {
                 JsonNode subPropertyNode = rootNode.get(key);
                 return subPropertyNode.asText();
             }
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
             return null;
         }
         return null;
     }
 
-    private void syncWithDittoThing(Thing thing, WoDTDigitalAdapterConfiguration configuration) {
+    private void syncWithDittoThing(final Thing thing, final WoDTDigitalAdapterConfiguration configuration) {
         // PROPERTIES (Thing Attributes) - finished
         thing.getAttributes().ifPresent(attributes -> {
             attributes.forEach((attribute) -> {
-                ThingModelElement property = this.propertiesList.stream()
+                ThingModelElement property = this.dtdManager.getTMProperties().stream()
                     .filter(p -> p.getElement().equals(attribute.getKey().toString()))
                     .findFirst()
                     .orElse(null);
@@ -171,11 +155,12 @@ public final class WoDTDigitalAdapter {
         thing.getFeatures().ifPresent(features -> {
             features.forEach((featureName) -> {
                 featureName.getProperties().ifPresent(properties -> { // - finished
+                    // PROPERTIES (Thing Features Properties)
                     properties.forEach((property) -> {
                         List<String> subProperties = extractSubPropertiesNames(property.getValue().toString()); // Check for subproperties
                         if(!subProperties.isEmpty()) {
                             subProperties.forEach(subProperty -> {                                
-                                ThingModelElement featureProperty = this.propertiesList.stream()
+                                ThingModelElement featureProperty = this.dtdManager.getTMProperties().stream()
                                     .filter(p -> p.getElement().equals(property.getKey().toString() + "_" + subProperty))
                                     .filter(p -> p.getValue().get().equals(featureName.getId()))
                                     .findFirst()
@@ -190,7 +175,7 @@ public final class WoDTDigitalAdapter {
                                 this.dtdManager.addProperty(fullPropertyName);
                             });
                         } else {
-                            ThingModelElement featureProperty = this.propertiesList.stream()
+                            ThingModelElement featureProperty = this.dtdManager.getTMProperties().stream()
                                 .filter(p -> p.getElement().equals(property.getKey().toString()))
                                 .filter(p -> p.getValue().get().equals(featureName.getId()))
                                 .findFirst()
@@ -207,7 +192,7 @@ public final class WoDTDigitalAdapter {
                     });
 
                     // TO DO: Add Feature actions
-                    this.actionsList.stream()
+                    this.dtdManager.getTMActions().stream()
                         .filter(action -> action.getValue().isPresent() && action.getValue().get().equals(featureName.getId()))
                         .forEach(action -> {
                             String fullActionName = featureName.getId() + "_" + action.getElement();
@@ -216,7 +201,7 @@ public final class WoDTDigitalAdapter {
                         });
 
                     // TO DO: Add Feature events
-                    this.eventsList.stream()
+                    this.dtdManager.getTMEvents().stream()
                         .filter(event -> event.getValue().isPresent() && event.getValue().get().equals(featureName.getId()))
                         .forEach(event -> {
                             String fullEventName = featureName.getId() + "_" + event.getElement();
@@ -228,7 +213,7 @@ public final class WoDTDigitalAdapter {
         });
 
         // ACTIONS (Thing Actions)
-        this.actionsList.stream()
+        this.dtdManager.getTMActions().stream()
             .filter(action -> action.getValue().isEmpty())
             .forEach(action -> {                
                 this.dtdManager.addAction(action.getElement());
@@ -236,7 +221,7 @@ public final class WoDTDigitalAdapter {
             });
 
         // TO DO: EVENTS (Thing Events)
-        this.eventsList.stream()
+        this.dtdManager.getTMEvents().stream()
             .filter(event -> event.getValue().isEmpty())
             .forEach(event -> {
                 this.dtdManager.addEvent(event.getElement(), event.getAdditionalData().orElse(""));
@@ -250,13 +235,13 @@ public final class WoDTDigitalAdapter {
     }
 
     public void onThingChange(ThingChange change) {
-        System.out.println(change);
+        System.out.println(change); // TO DO: sostituisci con logging
 
         switch (change.getAction()) {
             case CREATED:
                 if(change.getThing().get().getAttributes().isPresent()) { // Attributes creation - finished
                     change.getThing().get().getAttributes().get().forEach((attribute) -> {
-                        ThingModelElement prop = this.propertiesList.stream()
+                        ThingModelElement prop = this.dtdManager.getTMProperties().stream()
                             .filter(p -> p.getElement().equals(attribute.getKey().toString()))
                             .findFirst()
                             .orElse(null);
@@ -278,7 +263,7 @@ public final class WoDTDigitalAdapter {
                                 List<String> subProperties = extractSubPropertiesNames(property.getValue().toString()); // Check for subproperties
                                 if(!subProperties.isEmpty()) {
                                     subProperties.forEach(subProperty -> {
-                                        ThingModelElement featureProp = this.propertiesList.stream()
+                                        ThingModelElement featureProp = this.dtdManager.getTMProperties().stream()
                                             .filter(p -> p.getElement().equals(property.getKey().toString() + "_" + subProperty))
                                             .filter(p -> p.getValue().get().equals(featureName.getId()))
                                             .findFirst()
@@ -293,7 +278,7 @@ public final class WoDTDigitalAdapter {
                                         this.dtdManager.addProperty(fullPropertyName);
                                     });
                                 } else {
-                                    ThingModelElement featureProp = this.propertiesList.stream()
+                                    ThingModelElement featureProp = this.dtdManager.getTMProperties().stream()
                                         .filter(p -> p.getElement().equals(property.getKey().toString()))
                                         .filter(p -> p.getValue().get().equals(featureName.getId()))
                                         .findFirst()
@@ -311,8 +296,22 @@ public final class WoDTDigitalAdapter {
                         });
 
                         // TO DO: Add feature actions
+                        this.dtdManager.getTMActions().stream()
+                            .filter(action -> action.getValue().isPresent() && action.getValue().get().equals(featureName.getId()))
+                            .forEach(action -> {
+                                String fullActionName = featureName.getId() + "_" + action.getElement();
+                                this.dtdManager.addAction(fullActionName);
+                                this.dtkgEngine.addActionId(fullActionName);
+                            });
 
                         // TO DO: Add feature events
+                        this.dtdManager.getTMEvents().stream()
+                            .filter(event -> event.getValue().isPresent() && event.getValue().get().equals(featureName.getId()))
+                            .forEach(event -> {
+                                String fullEventName = featureName.getId() + "_" + event.getElement();
+                                this.dtdManager.addEvent(fullEventName, event.getAdditionalData().orElse(""));
+                                //this.dtkgEngine.addEvent(fullEventName);
+                            });
                     });
                 }
                 break;
@@ -326,10 +325,10 @@ public final class WoDTDigitalAdapter {
                     this.dtdManager.removeProperty(elementToDelete);
                 }
                 if(change.getPath().toString().contains("features")) { // Entire feature deletion (all feature properties) - not finished
-                    List<ThingModelElement> matchingProps = this.propertiesList.stream()
+                    List<ThingModelElement> matchingProperties = this.dtdManager.getTMProperties().stream()
                         .filter(p -> p.getValue().isPresent() && p.getValue().get().equals(elementToDelete))
                         .collect(Collectors.toList());
-                    matchingProps.forEach(
+                    matchingProperties.forEach(
                         prop -> {
                             String fullPorpertyName = prop.getValue().get() + "_" + prop.getElement();
                             this.configuration
@@ -341,14 +340,34 @@ public final class WoDTDigitalAdapter {
                     );
 
                     // TO DO: Remove feature actions
+                    List<ThingModelElement> matchingActions = this.dtdManager.getTMActions().stream()
+                        .filter(action -> action.getValue().isPresent() && action.getValue().get().equals(elementToDelete))
+                        .collect(Collectors.toList());
+                    matchingActions.forEach(
+                        action -> {
+                            String fullActionName = action.getValue().get() + "_" + action.getElement();
+                            this.dtdManager.removeAction(fullActionName);
+                            this.dtkgEngine.removeActionId(fullActionName);
+                        }
+                    );
 
                     // TO DO: Remove feature events
+                    List<ThingModelElement> matchingEvents = this.dtdManager.getTMEvents().stream()
+                        .filter(event -> event.getValue().isPresent() && event.getValue().get().equals(elementToDelete))
+                        .collect(Collectors.toList());
+                    matchingEvents.forEach(
+                        event -> {
+                            String fullEventName = event.getValue().get() + "_" + event.getElement();
+                            this.dtdManager.removeEvent(fullEventName);
+                            //this.dtkgEngine.removeEvent(fullEventName);
+                        }
+                    );
                 }
                 break;
             case UPDATED: // Aggiornamento valori attributi e features
                 if (change.getThing().get().getAttributes().isPresent()) {  // Update Thing Attributes - finished
                     change.getThing().get().getAttributes().get().forEach((attribute) -> {
-                        ThingModelElement prop = this.propertiesList.stream()
+                        ThingModelElement prop = this.dtdManager.getTMProperties().stream()
                             .filter(p -> p.getElement().equals(attribute.getKey().toString()))
                             .findFirst()
                             .orElse(null);
@@ -368,7 +387,7 @@ public final class WoDTDigitalAdapter {
                                 List<String> subProperties = extractSubPropertiesNames(property.getValue().toString()); // Check for subproperties
                                 if(!subProperties.isEmpty()) {
                                     subProperties.forEach(subProperty -> {
-                                        ThingModelElement featureProp = this.propertiesList.stream()
+                                        ThingModelElement featureProp = this.dtdManager.getTMProperties().stream()
                                             .filter(p -> p.getElement().equals(property.getKey().toString() + "_" + subProperty))
                                             .filter(p -> p.getValue().get().equals(featureName.getId()))
                                             .findFirst()
@@ -383,7 +402,7 @@ public final class WoDTDigitalAdapter {
                                         this.dtdManager.addProperty(fullPropertyName);
                                     });
                                 } else {
-                                    ThingModelElement featureProp = this.propertiesList.stream()
+                                    ThingModelElement featureProp = this.dtdManager.getTMProperties().stream()
                                         .filter(p -> p.getElement().equals(property.getKey().toString()))
                                         .filter(p -> p.getValue().get().equals(featureName.getId()))
                                         .findFirst()
