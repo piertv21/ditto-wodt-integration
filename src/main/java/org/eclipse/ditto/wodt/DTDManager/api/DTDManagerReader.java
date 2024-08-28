@@ -16,19 +16,12 @@
 
 package org.eclipse.ditto.wodt.DTDManager.api;
 
-import java.util.Set;
-
 import io.github.sanecity.wot.thing.Thing;
 
 /**
  * Reader part of the DTDManager component of the Abstract Architecture -- for ISP.
 */
 public interface DTDManagerReader {
-    /**
-     * Get the current available actions.
-    * @return the available action ids.
-    */
-    Set<String> getAvailableActionIds();
 
     /**
      * Obtain the Digital Twin Descriptor.

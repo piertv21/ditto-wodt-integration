@@ -3,8 +3,6 @@ package org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.eclipse.ditto.client.changes.ThingChange;
@@ -94,16 +92,6 @@ public final class WoDTDigitalAdapter {
                 configuration.getPortNumber(),
                 this.dtkgEngine,
                 this.dtdManager,
-                (actionName, body) -> {
-                    try {
-                        //publishDigitalActionWldtEvent(actionName, body); // TO DO: RIMUOVI
-                        return true;
-                    } catch (Exception e) {
-                        Logger.getLogger(WoDTDigitalAdapter.class.getName())
-                                .log(Level.INFO, "Impossible to forward action: {0}", e);
-                        return false;
-                    }
-                },
                 this.platformManagementInterface
         );
         this.dittoClientThread = new DittoThingListener(this);

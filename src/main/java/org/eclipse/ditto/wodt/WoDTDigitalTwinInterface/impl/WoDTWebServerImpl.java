@@ -16,8 +16,6 @@ package org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.impl;
  * limitations under the License.
  */
 
-import java.util.function.BiFunction;
-
 import org.eclipse.ditto.wodt.DTDManager.api.DTDManagerReader;
 import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
 import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterfaceNotifier;
@@ -44,19 +42,17 @@ public class WoDTWebServerImpl implements WoDTWebServer {
     * @param portNumber the port number where to expose the API
     * @param dtkgEngine the DTKGEngine
     * @param dtdManager the DTDManager
-    * @param actionHandler handler of action invocation
     * @param platformManagementInterfaceNotifier the Platform Management Interface Notifier component
     */
     public WoDTWebServerImpl(
             final int portNumber,
             final DTKGEngine dtkgEngine,
             final DTDManagerReader dtdManager,
-            final BiFunction<String, String, Boolean> actionHandler,
             final PlatformManagementInterfaceNotifier platformManagementInterfaceNotifier
             ) {
         this.portNumber = portNumber;
         this.wodtDigitalTwinInterfaceController = new WoDTDigitalTwinInterfaceControllerImpl(
-                dtkgEngine, dtdManager, actionHandler);
+                dtkgEngine, dtdManager);
         dtkgEngine.addDTKGObserver(this.wodtDigitalTwinInterfaceController::notifyNewDTKG);
         this.platformManagementInterfaceAPIController = new PlatformManagementInterfaceAPIControllerImpl(
                 platformManagementInterfaceNotifier

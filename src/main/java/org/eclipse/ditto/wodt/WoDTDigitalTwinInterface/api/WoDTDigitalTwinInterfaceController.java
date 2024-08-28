@@ -50,12 +50,6 @@ public interface WoDTDigitalTwinInterfaceController extends WebServerController 
     void routeGetDigitalTwinDescriptor(Context context);
 
     /**
-     * Handle an action invocation.
-    * @param context the javalin context.
-    */
-    void routeHandleActionInvocation(Context context);
-
-    /**
      * Notify the presence of a new Digital Twin Knowledge Graph.
     * @param newDtkg the new DTKG.
     */

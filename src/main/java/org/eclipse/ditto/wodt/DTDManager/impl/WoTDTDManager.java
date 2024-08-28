@@ -17,11 +17,9 @@ package org.eclipse.ditto.wodt.DTDManager.impl;
  */
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.ditto.wodt.DTDManager.api.DTDManager;
@@ -143,11 +141,6 @@ public class WoTDTDManager implements DTDManager {
     @Override
     public boolean removeAction(final String rawActionName) {
         return this.actions.remove(rawActionName) != null;
-    }
-
-    @Override
-    public Set<String> getAvailableActionIds() {
-        return new HashSet<>(this.actions.keySet());
     }
 
     @Override

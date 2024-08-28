@@ -19,7 +19,6 @@ package org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.impl;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.BiFunction;
 
 import org.eclipse.ditto.wodt.DTDManager.api.DTDManagerReader;
 import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngineReader;
@@ -39,23 +38,19 @@ import io.javalin.websocket.WsContext;
 final class WoDTDigitalTwinInterfaceControllerImpl implements WoDTDigitalTwinInterfaceController {
     private final DTKGEngineReader dtkgEngine;
     private final DTDManagerReader dtdManager;
-    private final BiFunction<String, String, Boolean> actionHandler;
     private final Set<WsContext> webSockets;
 
     /**
     * Default constructor.
     * @param dtkgEngine the DTKG Engine
     * @param dtdManager the DTD Manager
-    * @param actionHandler the handler for actions
     */
     WoDTDigitalTwinInterfaceControllerImpl(
             final DTKGEngineReader dtkgEngine,
-            final DTDManagerReader dtdManager,
-            final BiFunction<String, String, Boolean> actionHandler
+            final DTDManagerReader dtdManager
     ) {
         this.dtkgEngine = dtkgEngine;
         this.dtdManager = dtdManager;
-        this.actionHandler = actionHandler;
         this.webSockets = Collections.synchronizedSet(new HashSet<>());
     }
 
@@ -101,18 +96,6 @@ final class WoDTDigitalTwinInterfaceControllerImpl implements WoDTDigitalTwinInt
     }
 
     @Override
-    public void routeHandleActionInvocation(final Context context) {
-        final String action = context.pathParam("actionName");
-        if (this.dtdManager.getAvailableActionIds().contains(action)) {
-            context.status(
-                    this.actionHandler.apply(action, context.body()) ? HttpStatus.ACCEPTED : HttpStatus.BAD_REQUEST
-            );
-        } else {
-            context.status(HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @Override
     public void notifyNewDTKG(final String newDtkg) {
         this.webSockets.stream().filter(ctx -> ctx.session.isOpen()).forEach(session -> session.send(newDtkg));
     }
@@ -123,6 +106,5 @@ final class WoDTDigitalTwinInterfaceControllerImpl implements WoDTDigitalTwinInt
         app.get("/dtkg", this::routeGetDigitalTwinKnowledgeGraph);
         app.get("/dtd", this::routeGetDigitalTwinDescriptor);
         app.ws("/dtkg", this::routeGetDigitalTwinKnowledgeGraphEvents);
-        app.post("/action/{actionName}", this::routeHandleActionInvocation); // TO DO: modifica
     }
 }
