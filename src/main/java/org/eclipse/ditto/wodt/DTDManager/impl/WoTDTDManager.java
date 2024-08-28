@@ -27,6 +27,7 @@ import io.github.sanecity.wot.thing.form.Operation;
 import io.github.sanecity.wot.thing.property.ExposedThingProperty;
 import io.github.sanecity.wot.thing.property.ThingProperty;
 import io.github.sanecity.wot.thing.schema.VariableDataSchema;
+import io.github.sanecity.wot.thing.security.BasicSecurityScheme;
 
 /**
  * This class provide an implementation of the {@link io.github.webbasedwodt.application.component.DTDManager} using
@@ -286,8 +287,8 @@ public class WoTDTDManager implements DTDManager {
                         );
         thingDescription.getMetadata().put(WoDTVocabulary.PHYSICAL_ASSET_ID.getUri(), this.physicalAssetId);
         thingDescription.getMetadata().put(WoDTVocabulary.VERSION.getUri(), VERSION);
-
-        // Ditto basic security scheme
+        
+        /* OLD SOLUTION        
         Map<String, Object> securityDefinitions = new HashMap<>();
         Map<String, String> basicSc = new HashMap<>();
         basicSc.put("in", "header");
@@ -295,7 +296,10 @@ public class WoTDTDManager implements DTDManager {
         securityDefinitions.put("basic_sc", basicSc);
 
         thingDescription.getMetadata().put("securityDefinitions", securityDefinitions);
-        thingDescription.getMetadata().put("security", "basic_sc");
+        thingDescription.getMetadata().put("security", "basic_sc");*/
+        
+        thingDescription.setSecurityDefinitions(Map.of("basic_sc", new BasicSecurityScheme("header")));
+        thingDescription.setSecurity(List.of("basic_sc"));
     }
 
     private Optional<ThingProperty<Object>> createThingDescriptionProperty(
@@ -334,17 +338,17 @@ public class WoTDTDManager implements DTDManager {
 
     private Optional<ThingEvent<Object>> createThingDescriptionEvent(final String eventData) {
         return Optional.of(new ThingEvent.Builder()
-                .setData(
-                    new VariableDataSchema.Builder()
-                                .setType("integer " + eventData) // TO DO: edit
-                                .build()
+                .setData(new VariableDataSchema.Builder()
+                    .setType(eventData) // TO DO: edit
+                    .build()
                 )
+                .setType("integer")
                 .build());
     }
 
     @Override
     public void addEvent(String rawEventName, String rawEventPayload) {
-        this.createThingDescriptionEvent(rawEventName).ifPresent(event -> this.events.put(rawEventName, event));
+        this.createThingDescriptionEvent(rawEventPayload).ifPresent(event -> this.events.put(rawEventName, event));
     }
 
     @Override
