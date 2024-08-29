@@ -132,22 +132,42 @@ public final class WoDTDigitalAdapter {
     }
 
     private void syncWithDittoThing(final Thing thing, final WoDTDigitalAdapterConfiguration configuration) {
-        // PROPERTIES (Thing Attributes) - finished
-        thing.getAttributes().ifPresent(attributes -> {
+        // PROPERTIES (Thing Attributes)
+        thing.getAttributes().ifPresent(attributes -> { // - finished
             attributes.forEach((attribute) -> {
-                ThingModelElement property = this.dtdManager.getTMProperties().stream()
-                    .filter(p -> p.getElement().equals(attribute.getKey().toString()))
-                    .findFirst()
-                    .orElse(null);
-                if(property != null) {
-                    configuration.getOntology().convertPropertyValue(
-                        property.getElement(),
-                        attribute.getValue().asString() // TO DO: edit
-                    ).ifPresent(triple ->
-                            this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
-                    );
-                    this.dtdManager.addProperty(property.getElement());
-                }                
+                if(attribute.getKey().toString().contains("rel-")) { // Relationships
+                    ThingModelElement rel = this.dtdManager.getTMRelationships().stream()
+                        .filter(r -> r.getElement().equals(attribute.getKey().toString()))
+                        .findFirst()
+                        .orElse(null);
+                    if(rel != null) {
+                        configuration.getOntology().obtainPropertyValueType(attribute.getKey().toString()).ifPresent(
+                            relType -> {
+                                configuration.getOntology().convertRelationship(
+                                    attribute.getKey().toString(),
+                                    relType
+                                ).ifPresent(triple ->
+                                    this.dtkgEngine.addRelationship(triple.getLeft(), triple.getRight())
+                                );
+                                this.dtdManager.addRelationship(attribute.getKey().toString());
+                            }
+                        );
+                    }                    
+                } else { // Attributes
+                    ThingModelElement property = this.dtdManager.getTMProperties().stream()
+                        .filter(p -> p.getElement().equals(attribute.getKey().toString()))
+                        .findFirst()
+                        .orElse(null);
+                    if(property != null) {
+                        configuration.getOntology().convertPropertyValue(
+                            property.getElement(),
+                            attribute.getValue().asString() // TO DO: edit
+                        ).ifPresent(triple ->
+                                this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                        );
+                        this.dtdManager.addProperty(property.getElement());
+                    }
+                }
             });
         });
 
@@ -155,7 +175,7 @@ public final class WoDTDigitalAdapter {
         thing.getFeatures().ifPresent(features -> {
             features.forEach((featureName) -> {
                 featureName.getProperties().ifPresent(properties -> { // - finished
-                    // PROPERTIES (Thing Features Properties)
+                    // Feature Properties
                     properties.forEach((property) -> {
                         List<String> subProperties = extractSubPropertiesNames(property.getValue().toString()); // Check for subproperties
                         if(!subProperties.isEmpty()) {
@@ -191,7 +211,7 @@ public final class WoDTDigitalAdapter {
                         }
                     });
 
-                    // TO DO: Add Feature actions
+                    // Feature Actions
                     this.dtdManager.getTMActions().stream()
                         .filter(action -> action.getValue().isPresent() && action.getValue().get().equals(featureName.getId()))
                         .forEach(action -> {
@@ -200,7 +220,7 @@ public final class WoDTDigitalAdapter {
                             this.dtkgEngine.addActionId(fullActionName);
                         });
 
-                    // TO DO: Add Feature events
+                    // Feature Events
                     this.dtdManager.getTMEvents().stream()
                         .filter(event -> event.getValue().isPresent() && event.getValue().get().equals(featureName.getId()))
                         .forEach(event -> {
@@ -241,18 +261,38 @@ public final class WoDTDigitalAdapter {
             case CREATED:
                 if(change.getThing().get().getAttributes().isPresent()) { // Attributes creation - finished
                     change.getThing().get().getAttributes().get().forEach((attribute) -> {
-                        ThingModelElement prop = this.dtdManager.getTMProperties().stream()
-                            .filter(p -> p.getElement().equals(attribute.getKey().toString()))
-                            .findFirst()
-                            .orElse(null);
-                        if(prop != null) {
-                            configuration.getOntology().convertPropertyValue(
-                                prop.getElement(),
-                                attribute.getValue().asString() // TO DO: edit
-                            ).ifPresent(triple ->
-                                    this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
-                            );
-                            this.dtdManager.addProperty(prop.getElement());
+                        if(attribute.getKey().toString().contains("rel-")) { // Relationship
+                            ThingModelElement rel = this.dtdManager.getTMRelationships().stream()
+                                .filter(r -> r.getElement().equals(attribute.getKey().toString()))
+                                .findFirst()
+                                .orElse(null);
+                            if(rel != null) {
+                                configuration.getOntology().obtainPropertyValueType(attribute.getKey().toString()).ifPresent(
+                                    relType -> {
+                                        configuration.getOntology().convertRelationship(
+                                            attribute.getKey().toString(),
+                                            relType
+                                        ).ifPresent(triple ->
+                                            this.dtkgEngine.addRelationship(triple.getLeft(), triple.getRight())
+                                        );
+                                        this.dtdManager.addRelationship(attribute.getKey().toString());
+                                    }
+                                );
+                            }
+                        } else { // Attribute
+                            ThingModelElement prop = this.dtdManager.getTMProperties().stream()
+                                .filter(p -> p.getElement().equals(attribute.getKey().toString()))
+                                .findFirst()
+                                .orElse(null);
+                            if(prop != null) {
+                                configuration.getOntology().convertPropertyValue(
+                                    prop.getElement(),
+                                    attribute.getValue().asString() // TO DO: edit
+                                ).ifPresent(triple ->
+                                        this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
+                                );
+                                this.dtdManager.addProperty(prop.getElement());
+                            }
                         }
                     });
                 }
@@ -317,12 +357,32 @@ public final class WoDTDigitalAdapter {
                 break;
             case DELETED:
                 String elementToDelete = change.getPath().toString().split("/")[2];
-                if(change.getPath().toString().contains("attributes")) { // Attributes deletion - finished                    
-                    this.configuration
-                        .getOntology()
-                        .obtainProperty(elementToDelete)
-                        .ifPresent(this.dtkgEngine::removeProperty);
-                    this.dtdManager.removeProperty(elementToDelete);
+                if(change.getPath().toString().contains("attributes")) { // Attributes deletion - finished
+                    if(elementToDelete.contains("rel-")) { // Relationship
+                        ThingModelElement rel = this.dtdManager.getTMRelationships().stream()
+                            .filter(r -> r.getElement().equals(elementToDelete))
+                            .findFirst()
+                            .orElse(null);
+                        if(rel != null) {
+                            configuration.getOntology().obtainPropertyValueType(elementToDelete).ifPresent(
+                                relType -> {
+                                    configuration.getOntology().convertRelationship(
+                                        elementToDelete,
+                                        relType
+                                    ).ifPresent(triple ->
+                                        this.dtkgEngine.removeRelationship(triple.getLeft(), triple.getRight())
+                                    );
+                                    this.dtdManager.removeRelationship(elementToDelete);
+                                }
+                            );
+                        }
+                    } else { // Attribute
+                        this.configuration
+                            .getOntology()
+                            .obtainProperty(elementToDelete)
+                            .ifPresent(this.dtkgEngine::removeProperty);
+                        this.dtdManager.removeProperty(elementToDelete);
+                    }
                 }
                 if(change.getPath().toString().contains("features")) { // Entire feature deletion (all feature properties) - not finished
                     List<ThingModelElement> matchingProperties = this.dtdManager.getTMProperties().stream()

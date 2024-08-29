@@ -61,7 +61,8 @@ public class WoTDTDManager implements DTDManager {
     private List<ThingModelElement> extractedContextExtensionsList;
     private List<ThingModelElement> extractedPropertiesList;
     private List<ThingModelElement> extractedActionsList;
-    private List<ThingModelElement> extractedEventsList;    
+    private List<ThingModelElement> extractedEventsList;
+    private List<ThingModelElement> extractedRelationshipsList;
 
     // TO DO: migliorare diverse parti del codice (brutte o ripetitive)
 
@@ -100,6 +101,7 @@ public class WoTDTDManager implements DTDManager {
         this.extractedPropertiesList = extractDataFromThing.get(1);
         this.extractedActionsList = extractDataFromThing.get(2);
         this.extractedEventsList = extractDataFromThing.get(3);
+        this.extractedRelationshipsList = extractDataFromThing.get(4);
     }
 
     @Override
@@ -153,10 +155,10 @@ public class WoTDTDManager implements DTDManager {
                     thingDescription.addAction(rawActionName, action, () -> { }));
             this.events.forEach((rawEventName, event) -> thingDescription.addEvent(rawEventName, event));
 
-            // Add Properties & Relationships affordances
+            // Add Properties affordances
             thingDescription.getProperties().forEach((name, property) -> {
-                if(!name.equals("snapshot")) {
-                    String[] splitPropertyName = splitStringAtFirstUnderscore(name);
+                if(!name.equals("snapshot") && !name.contains("rel-")) {
+                    String[] splitPropertyName = splitStringAtFirstCharOccurrence(name, '_');
                     ThingModelElement prop;
                     if(splitPropertyName != null) {
                         prop = extractedPropertiesList.stream()
@@ -187,11 +189,23 @@ public class WoTDTDManager implements DTDManager {
                             .setSubprotocol("sse")
                             .build());
                 }
+                if(name.contains("rel-")) {
+                    String href = BASE_URL + this.dittoThingId + ATTRIBUTE_URL.replace("{attributePath}", name);
+                    property.addForm(new Form.Builder()
+                            .addOp(Operation.READ_PROPERTY)
+                            .setHref(href)
+                            .build());
+                    property.addForm(new Form.Builder()
+                            .addOp(Operation.OBSERVE_PROPERTY)
+                            .setHref(href)
+                            .setSubprotocol("sse")
+                            .build());
+                }
             });
 
             // Add Actions affordances
             thingDescription.getActions().forEach((name, action) -> {
-                String[] splitActionName = splitStringAtFirstUnderscore(name);
+                String[] splitActionName = splitStringAtFirstCharOccurrence(name, '_');
                 ThingModelElement act;
                 if(splitActionName != null) {
                     act = extractedActionsList.stream()
@@ -220,7 +234,7 @@ public class WoTDTDManager implements DTDManager {
 
             // Add Events affordances
             thingDescription.getEvents().forEach((name, event) -> {
-                String[] splitEventName = splitStringAtFirstUnderscore(name);
+                String[] splitEventName = splitStringAtFirstCharOccurrence(name, '_');
                 ThingModelElement evt;
                 if(splitEventName != null) {
                     evt = extractedEventsList.stream()
@@ -253,8 +267,8 @@ public class WoTDTDManager implements DTDManager {
         }
     }
 
-    private String[] splitStringAtFirstUnderscore(String input) {
-        int underscoreIndex = input.indexOf('_');
+    private String[] splitStringAtFirstCharOccurrence(String input, char character) {
+        int underscoreIndex = input.indexOf(character);
         if (underscoreIndex != -1) {
             String firstPart = input.substring(0, underscoreIndex);
             String secondPart = input.substring(underscoreIndex + 1);
@@ -369,6 +383,11 @@ public class WoTDTDManager implements DTDManager {
     @Override
     public List<ThingModelElement> getTMEvents() {
         return List.copyOf(this.extractedEventsList);
+    }
+
+    @Override
+    public List<ThingModelElement> getTMRelationships() {
+        return List.copyOf(this.extractedRelationshipsList);
     }
 
     /**

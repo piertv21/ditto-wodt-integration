@@ -43,9 +43,9 @@ public final class BulbHolderDTOntology implements DTOntology {
     );
     
     private static final Map<String, Pair<String, String>> relationshipMap = Map.of(
-        "located-inside", Pair.of(
-                "https://bhontology/ontology#isLocatedInside",
-                "https://homeontology/ontology#Room"
+        "rel-linked-with", Pair.of(
+                "https://bhontology.com/ontology#LinkedWith",
+                "https://flontology.com/ontology#FloorLamp"
         )
     );
 

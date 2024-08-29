@@ -31,18 +31,20 @@ public class ThingUtils {
      * [1] = Properties list with element: (name, featureName?, additionalData?)
      * [2] = Actions list with element: (name, featureName?, additionalData?)
      * [3] = Events list with element: (name, featureName?, additionalData?)
+     * [4] = Relationships list with element: (name, featureName?, additionalData?)
      */
     public static List<List<ThingModelElement>> extractDataFromThing(Thing thing) {
         List<ThingModelElement> contextExtensionsList = new ArrayList<>();
         List<ThingModelElement> propertiesList = new ArrayList<>();
         List<ThingModelElement> actionsList = new ArrayList<>();
         List<ThingModelElement> eventsList = new ArrayList<>();
+        List<ThingModelElement> relationshipsList = new ArrayList<>();
 
         // Current Thing
         extractDataFromCurrentModel(
             thing.getDefinition().get().toString(), "",
             contextExtensionsList, propertiesList,
-            actionsList, eventsList
+            actionsList, eventsList, relationshipsList
         );
 
         // Submodels
@@ -53,7 +55,7 @@ public class ThingUtils {
                     extractDataFromCurrentModel(
                         def.getFirstIdentifier().toString(), featureName,
                         contextExtensionsList, propertiesList,
-                        actionsList, eventsList
+                        actionsList, eventsList, relationshipsList
                     );
                 });
             });
@@ -64,6 +66,7 @@ public class ThingUtils {
         result.add(propertiesList);
         result.add(actionsList);
         result.add(eventsList);
+        result.add(relationshipsList);
         return result;
     }
 
@@ -76,7 +79,8 @@ public class ThingUtils {
             List<ThingModelElement> contextExtensionsList,
             List<ThingModelElement> propertiesList,
             List<ThingModelElement> actionsList,
-            List<ThingModelElement> eventsList
+            List<ThingModelElement> eventsList,
+            List<ThingModelElement> relationshipsList
     ) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -94,21 +98,19 @@ public class ThingUtils {
                         for (Map.Entry<String, JsonElement> entry : contextObj.entrySet()) {
                             String alias = entry.getKey();
                             String contextUrl = entry.getValue().getAsString();
-                            //contextUrl = contextUrl.endsWith("#") ? contextUrl.substring(0, contextUrl.length() - 1) : contextUrl;
-                            //contextUrl = !contextUrl.endsWith("/") ? contextUrl + "/" : contextUrl;
                             addModelElement(contextExtensionsList, new ThingModelElement(alias, Optional.of(contextUrl), Optional.empty()));
                         }
                     }
                 }
             }
 
-            // Properties
+            // Properties and Relationships
             if (jsonObject.has("properties")) {
                 JsonObject properties = jsonObject.getAsJsonObject("properties");
                 for (String propertyKey : properties.keySet()) {
                     JsonObject property = properties.getAsJsonObject(propertyKey);
                     boolean isComplex = "object".equals(property.get("type").getAsString());
-                    
+
                     if (isComplex && property.has("properties")) {
                         JsonObject subProperties = property.getAsJsonObject("properties");
                         for (String subPropertyKey : subProperties.keySet()) {
@@ -116,7 +118,11 @@ public class ThingUtils {
                             addModelElement(propertiesList, new ThingModelElement(complexPropertyKey, Optional.of(featureName), Optional.empty()));
                         }
                     } else {
-                        addModelElement(propertiesList, new ThingModelElement(propertyKey, Optional.of(featureName), Optional.empty()));
+                        if (propertyKey.startsWith("rel-")) {
+                            addModelElement(relationshipsList, new ThingModelElement(propertyKey, Optional.of(featureName), Optional.empty()));
+                        } else {
+                            addModelElement(propertiesList, new ThingModelElement(propertyKey, Optional.of(featureName), Optional.empty()));
+                        }
                     }
                 }
             }
@@ -156,16 +162,16 @@ public class ThingUtils {
                         if ("tm:submodel".equals(rel)) {
                             String href = link.get("href").getAsString();
                             String instanceName = link.has("instanceName") ? link.get("instanceName").getAsString() : "";
-                            extractDataFromCurrentModel(href, instanceName, contextExtensionsList, propertiesList, actionsList, eventsList);
+                            extractDataFromCurrentModel(href, instanceName, contextExtensionsList, propertiesList, actionsList, eventsList, relationshipsList);
                         } else if ("tm:extends".equals(rel)) {
                             String href = link.get("href").getAsString();
-                            extractDataFromCurrentModel(href, featureName, contextExtensionsList, propertiesList, actionsList, eventsList);
+                            extractDataFromCurrentModel(href, featureName, contextExtensionsList, propertiesList, actionsList, eventsList, relationshipsList);
                         }
                     }
                 });                
             }
         } catch (IOException | InterruptedException e) {
-            System.err.println("Errore durante il download o parsing del Thing Model: " + url);
+            System.err.println("Error during thing model parsing: " + url);
         }
     }
 

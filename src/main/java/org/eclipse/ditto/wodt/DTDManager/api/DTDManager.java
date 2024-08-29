@@ -87,4 +87,9 @@ public interface DTDManager extends DTDManagerReader {
      * Get the available events of the Thing Model.
      */
     List<ThingModelElement> getTMEvents();
+
+    /*
+     * Get the available relationships of the Thing Model.
+     */
+    List<ThingModelElement> getTMRelationships();
 }
