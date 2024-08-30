@@ -19,6 +19,7 @@ import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.impl.WoDTWebServerImpl;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.api.WoDTDigitalAdapterConfiguration;
 import org.eclipse.ditto.wodt.common.DittoBase;
 import org.eclipse.ditto.wodt.common.ThingModelElement;
+import static org.eclipse.ditto.wodt.common.ThingUtils.convertStringToType;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -161,7 +162,7 @@ public final class WoDTDigitalAdapter {
                     if(property != null) {
                         configuration.getOntology().convertPropertyValue(
                             property.getElement(),
-                            attribute.getValue().asString() // TO DO: edit
+                            convertStringToType(attribute.getValue().toString()) // TO DO: edit
                         ).ifPresent(triple ->
                                 this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                         );
@@ -188,7 +189,7 @@ public final class WoDTDigitalAdapter {
                                 String fullPropertyName = featureProperty.getValue().get() + "_" + property.getKey() + "_" + subProperty;
                                 configuration.getOntology().convertPropertyValue(
                                     fullPropertyName,
-                                    extractSubPropertyValue(property.getValue().toString(), subProperty) // TO DO: edit
+                                    convertStringToType(extractSubPropertyValue(property.getValue().toString(), subProperty)) // TO DO: edit
                                 ).ifPresent(triple ->
                                     this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                                 );
@@ -203,7 +204,7 @@ public final class WoDTDigitalAdapter {
                             String fullPropertyName = featureProperty.getValue().get() + "_" + property.getKey().toString();
                             configuration.getOntology().convertPropertyValue(
                                 fullPropertyName,
-                                property.getValue().toString() // TO DO: edit
+                                convertStringToType(property.getValue().toString()) // TO DO: edit
                             ).ifPresent(triple ->
                                 this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                             );
@@ -287,7 +288,7 @@ public final class WoDTDigitalAdapter {
                             if(prop != null) {
                                 configuration.getOntology().convertPropertyValue(
                                     prop.getElement(),
-                                    attribute.getValue().asString() // TO DO: edit
+                                    convertStringToType(attribute.getValue().toString()) // TO DO: edit
                                 ).ifPresent(triple ->
                                         this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                                 );
@@ -311,7 +312,7 @@ public final class WoDTDigitalAdapter {
                                         String fullPropertyName = featureProp.getValue().get() + "_" + property.getKey() + "_" + subProperty;
                                         configuration.getOntology().convertPropertyValue(
                                             fullPropertyName,
-                                            extractSubPropertyValue(property.getValue().toString(), subProperty) // TO DO: edit
+                                            convertStringToType(extractSubPropertyValue(property.getValue().toString(), subProperty)) // TO DO: edit
                                         ).ifPresent(triple ->
                                             this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                                         );
@@ -326,7 +327,7 @@ public final class WoDTDigitalAdapter {
                                     String fullPropertyName = featureProp.getValue().get() + "_" + property.getKey().toString();
                                     configuration.getOntology().convertPropertyValue(
                                         fullPropertyName,
-                                        property.getValue().toString() // TO DO: edit
+                                        convertStringToType(property.getValue().toString()) // TO DO: edit
                                     ).ifPresent(triple ->
                                         this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                                     );
@@ -433,7 +434,7 @@ public final class WoDTDigitalAdapter {
                             .orElse(null);
                         configuration.getOntology().convertPropertyValue(
                             prop.getElement(),
-                            attribute.getValue().asString() // TO DO: edit
+                            convertStringToType(attribute.getValue().toString()) // TO DO: edit
                         ).ifPresent(triple ->
                                 this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                         );
@@ -455,7 +456,7 @@ public final class WoDTDigitalAdapter {
                                         String fullPropertyName = featureProp.getValue().get() + "_" + property.getKey() + "_" + subProperty;
                                         configuration.getOntology().convertPropertyValue(
                                             fullPropertyName,
-                                            extractSubPropertyValue(property.getValue().toString(), subProperty) // TO DO: edit
+                                            convertStringToType(extractSubPropertyValue(property.getValue().toString(), subProperty)) // TO DO: edit
                                         ).ifPresent(triple ->
                                             this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                                         );
@@ -470,7 +471,7 @@ public final class WoDTDigitalAdapter {
                                     String fullPropertyName = featureProp.getValue().get() + "_" + property.getKey().toString();
                                     configuration.getOntology().convertPropertyValue(
                                         fullPropertyName,
-                                        property.getValue().toString() // TO DO: edit
+                                        convertStringToType(property.getValue().toString()) // TO DO: edit
                                     ).ifPresent(triple ->
                                         this.dtkgEngine.addDigitalTwinPropertyUpdate(triple.getLeft(), triple.getRight())
                                     );

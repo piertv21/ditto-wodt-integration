@@ -16,6 +16,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 /*
  * Utility class for Thing-related operations
@@ -175,6 +176,52 @@ public class ThingUtils {
         } catch (IOException | InterruptedException e) {
             System.err.println("Error during thing model parsing: " + url);
         }
+    }
+
+    public static Object convertStringToType(String input) {
+        // null
+        if (input == null || input.equalsIgnoreCase("null")) {
+            return null;
+        }
+        // Boolean
+        if (input.equalsIgnoreCase("true")
+            || input.equalsIgnoreCase("false")) {
+            return Boolean.valueOf(input);
+        }
+        // Integer
+        try {
+            Integer intValue = Integer.valueOf(input);
+            return intValue;
+        } catch (NumberFormatException e) {
+            // Continue
+        }
+        // Long
+        try {
+            Long longValue = Long.valueOf(input);
+            return longValue;
+        } catch (NumberFormatException e) {
+            // Continue
+        }
+        // Double
+        try {
+            Double doubleValue = Double.valueOf(input);
+            return doubleValue;
+        } catch (NumberFormatException e) {
+            // Continue
+        }
+        // JSON
+        try {
+            JsonElement jsonElement = JsonParser.parseString(input);
+            if (jsonElement.isJsonObject()) {
+                return jsonElement.getAsJsonObject();
+            } else if (jsonElement.isJsonArray()) {
+                return jsonElement.getAsJsonArray();
+            }
+        } catch (JsonSyntaxException e) {
+            // Continue
+        }
+        // Otherwise return the input as String
+        return input.replace("\"", "");
     }
 
     /**
