@@ -1,7 +1,6 @@
 package org.eclipse.ditto.wodt.DTDManager.impl;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -141,8 +140,10 @@ public final class FloorLampDTOntology implements DTOntology {
         "Status-LED_switch-on-for-duration", "https://switchableontology.com/ontology#Status-LED_switch-on-for-duration"
     );
 
-    private static final List<String> eventList = List.of(
-        "PowerConsumptionAwareness_current-power-consumption", "SmokeDetection_smoke-detected", "SmokeDetection_smoke-cleared"
+    private static final Map<String, String> eventMap = Map.of(
+        "PowerConsumptionAwareness_current-power-consumption", "http://www.ontology-of-units-of-measure.org/resource/om-2/Power",
+        "SmokeDetection_smoke-detected", "object",
+        "SmokeDetection_smoke-cleared", "object"
     );
 
     @Override
@@ -199,6 +200,15 @@ public final class FloorLampDTOntology implements DTOntology {
     public Optional<String> obtainActionType(final String rawAction) {
         if (actionMap.containsKey(rawAction)) {
             return Optional.of(actionMap.get(rawAction));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<String> obtainEventType(String rawEvent) {
+        if (eventMap.containsKey(rawEvent)) {
+            return Optional.of(eventMap.get(rawEvent));
         } else {
             return Optional.empty();
         }

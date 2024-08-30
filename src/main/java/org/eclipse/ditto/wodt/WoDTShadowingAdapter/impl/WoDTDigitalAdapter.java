@@ -37,7 +37,7 @@ public final class WoDTDigitalAdapter {
     private final WoDTDigitalAdapterConfiguration configuration;    
     private final DittoThingListener dittoClientThread;
 
-    // TO DO: ottimizzare al meglio il codice evitando ripetizioni
+    // TO DO: refactor del codice
 
     /**
      * Default constructor.
@@ -210,25 +210,25 @@ public final class WoDTDigitalAdapter {
                             this.dtdManager.addProperty(fullPropertyName);
                         }
                     });
-
-                    // Feature Actions
-                    this.dtdManager.getTMActions().stream()
-                        .filter(action -> action.getValue().isPresent() && action.getValue().get().equals(featureName.getId()))
-                        .forEach(action -> {
-                            String fullActionName = featureName.getId() + "_" + action.getElement();
-                            this.dtdManager.addAction(fullActionName);
-                            this.dtkgEngine.addActionId(fullActionName);
-                        });
-
-                    // Feature Events
-                    this.dtdManager.getTMEvents().stream()
-                        .filter(event -> event.getValue().isPresent() && event.getValue().get().equals(featureName.getId()))
-                        .forEach(event -> {
-                            String fullEventName = featureName.getId() + "_" + event.getElement();
-                            this.dtdManager.addEvent(fullEventName, event.getAdditionalData().orElse(""));
-                            //this.dtkgEngine.addEvent(fullEventName);
-                        });
                 });
+
+                // Feature Actions
+                this.dtdManager.getTMActions().stream()
+                    .filter(action -> action.getValue().isPresent() && action.getValue().get().equals(featureName.getId()))
+                    .forEach(action -> {
+                        String fullActionName = featureName.getId() + "_" + action.getElement();
+                        this.dtdManager.addAction(fullActionName);
+                        this.dtkgEngine.addActionId(fullActionName);
+                    });
+
+                // Feature Events
+                this.dtdManager.getTMEvents().stream()
+                    .filter(event -> event.getValue().isPresent() && event.getValue().get().equals(featureName.getId()))
+                    .forEach(event -> {
+                        String fullEventName = featureName.getId() + "_" + event.getElement();
+                        this.dtdManager.addEvent(fullEventName);
+                        //this.dtkgEngine.addEvent(fullEventName);
+                    });
             });
         });
 
@@ -244,7 +244,7 @@ public final class WoDTDigitalAdapter {
         this.dtdManager.getTMEvents().stream()
             .filter(event -> event.getValue().isEmpty())
             .forEach(event -> {
-                this.dtdManager.addEvent(event.getElement(), event.getAdditionalData().orElse(""));
+                this.dtdManager.addEvent(event.getElement());
                 //this.dtkgEngine.addEvent(event.getElement());
             });
     }
@@ -349,7 +349,7 @@ public final class WoDTDigitalAdapter {
                             .filter(event -> event.getValue().isPresent() && event.getValue().get().equals(featureName.getId()))
                             .forEach(event -> {
                                 String fullEventName = featureName.getId() + "_" + event.getElement();
-                                this.dtdManager.addEvent(fullEventName, event.getAdditionalData().orElse(""));
+                                this.dtdManager.addEvent(fullEventName);
                                 //this.dtkgEngine.addEvent(fullEventName);
                             });
                     });

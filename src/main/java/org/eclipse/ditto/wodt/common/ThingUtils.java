@@ -24,6 +24,8 @@ public class ThingUtils {
 
     private static final HttpClient httpClient = HttpClient.newHttpClient();
 
+    // TO DO: rimuovi l'estrazione di additionalData dagli eventi e dal ThingModelElement
+
     /**
      * Extract some information exploring a Thing model hierarchically.
      * Output: List of lists.

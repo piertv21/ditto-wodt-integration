@@ -66,7 +66,7 @@ public interface DTDManager extends DTDManagerReader {
     /*
      * Add an event to the DTD.
      */
-    void addEvent(String rawEventName, String rawEventPayload);
+    void addEvent(String rawEventName);
 
     /*
      * Remove an event from the DTD.

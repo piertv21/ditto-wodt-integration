@@ -74,4 +74,9 @@ public interface DTOntology {
      * @return an optional with the type of the action
      */
     Optional<String> obtainActionType(String rawAction);
+
+    /*
+     * Obtain the semantic type that describe the event.
+     */
+    Optional<String> obtainEventType(String rawEvent);
 }

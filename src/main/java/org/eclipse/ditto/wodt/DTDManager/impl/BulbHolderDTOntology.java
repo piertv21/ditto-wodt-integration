@@ -55,11 +55,9 @@ public final class BulbHolderDTOntology implements DTOntology {
     );
 
     private static final Map<String, String> eventMap = Map.of(
-        "Bulb_burnt-out-bulb", "https://bulbontology.com/ontology#BurntOutBulb",
-        "overheating", "https://bhontology.com/ontology#Overheating"
+        "Bulb_burnt-out-bulb", "boolean",
+        "overheating", "boolean"
     );
-
-    // TO DO: aggiungi eventMap + funzioni sotto
 
     @Override
     public String getDigitalTwinType() {
@@ -115,6 +113,15 @@ public final class BulbHolderDTOntology implements DTOntology {
     public Optional<String> obtainActionType(final String rawAction) {
         if (actionMap.containsKey(rawAction)) {
             return Optional.of(actionMap.get(rawAction));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<String> obtainEventType(String rawEvent) {
+        if (eventMap.containsKey(rawEvent)) {
+            return Optional.of(eventMap.get(rawEvent));
         } else {
             return Optional.empty();
         }

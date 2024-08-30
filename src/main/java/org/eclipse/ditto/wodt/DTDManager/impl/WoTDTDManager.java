@@ -350,19 +350,15 @@ public class WoTDTDManager implements DTDManager {
                 .build());
     }
 
-    private Optional<ThingEvent<Object>> createThingDescriptionEvent(final String eventData) {
-        return Optional.of(new ThingEvent.Builder()
-                .setData(new VariableDataSchema.Builder()
-                    .setType(eventData) // TO DO: edit
-                    .build()
-                )
-                .setType("integer")
+    private Optional<ThingEvent<Object>> createThingDescriptionEvent(final String rawEventName) {
+        return this.ontology.obtainEventType(rawEventName).map(eventType -> new ThingEvent.Builder()
+                .setData(new VariableDataSchema.Builder().setType(eventType).build())
                 .build());
     }
 
     @Override
-    public void addEvent(String rawEventName, String rawEventPayload) {
-        this.createThingDescriptionEvent(rawEventPayload).ifPresent(event -> this.events.put(rawEventName, event));
+    public void addEvent(String rawEventName) {
+        this.createThingDescriptionEvent(rawEventName).ifPresent(event -> this.events.put(rawEventName, event));
     }
 
     @Override
