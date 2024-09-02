@@ -6,12 +6,16 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.ditto.things.model.Thing;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -222,6 +226,38 @@ public class ThingUtils {
         }
         // Otherwise return the input as String
         return input.replace("\"", "");
+    }
+
+    public static List<String> extractSubPropertiesNames(final String jsonProperty) {
+        List<String> subProperties = new ArrayList<>();
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            JsonNode rootNode = objectMapper.readTree(jsonProperty);
+            if (rootNode.isObject()) {
+                Iterator<String> fieldNames = rootNode.fieldNames();
+                while (fieldNames.hasNext()) {
+                    String fieldName = fieldNames.next();
+                    subProperties.add(fieldName);
+                }
+            }
+        } catch (JsonProcessingException e) {
+            System.out.println("Error");
+        }
+        return subProperties;
+    }
+    
+    public static String extractSubPropertyValue(final String jsonValue, final String key) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            JsonNode rootNode = objectMapper.readTree(jsonValue);
+            if (rootNode.isObject() && rootNode.has(key)) {
+                JsonNode subPropertyNode = rootNode.get(key);
+                return subPropertyNode.asText();
+            }
+        } catch (JsonProcessingException e) {
+            return null;
+        }
+        return null;
     }
 
     /**

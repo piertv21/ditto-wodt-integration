@@ -29,7 +29,7 @@ public class DittoThingListener extends Thread {
             client.getClient().twin().startConsumption().thenAccept(v -> {
                 LOGGER.info("Subscribed for Ditto Thing changes");
                 client.getClient().twin().registerForThingChanges("my-changes", change -> {
-                    LOGGER.info("Received Thing change");
+                    LOGGER.info("Received Thing element " + change.getAction() + " change");
                     this.woDTDigitalAdapter.onThingChange(change);
                 });
             });
