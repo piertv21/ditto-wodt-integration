@@ -78,7 +78,7 @@ public final class WoDTDigitalAdapter {
 
     private void startAdapter() {
         this.woDTWebServer.start();
-        /*this.configuration.getPlatformToRegister().forEach(platform ->
+        /* TO DO: this.configuration.getPlatformToRegister().forEach(platform ->
                 this.platformManagementInterface.registerToPlatform(platform, this.dtdManager.getDTD().toJson()));*/
         dittoClientThread.start();
     }

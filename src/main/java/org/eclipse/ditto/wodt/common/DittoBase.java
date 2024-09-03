@@ -12,6 +12,7 @@
  */
 package org.eclipse.ditto.wodt.common;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -61,15 +62,6 @@ public class DittoBase {
 
     public DittoClient getClient() {
         return this.client;
-    }
-
-    private void startConsumeChanges(final DittoClient client) {
-        try {
-            client.twin().startConsumption().toCompletableFuture().get(TIMEOUT, TimeUnit.SECONDS);
-        } catch (final InterruptedException | ExecutionException | TimeoutException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Error subscribing to change events.", e);
-        }
     }
 
     private DisconnectedDittoClient buildClient() {
@@ -138,7 +130,7 @@ public class DittoBase {
                         }, (byteBuffer, charset) -> {
                             try {
                                 return objectMapper.readValue(byteBuffer.array(), User.class);
-                            } catch (Exception e) {
+                            } catch (IOException e) {
                                 throw new IllegalStateException("Could not deserialize", e);
                             }
                         }));

@@ -29,7 +29,7 @@ public final class ConfigProperties {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigProperties.class);
 
-    private static final String CONFIG_PROPERTIES_FILE = "config.properties";
+    private static final String CONFIG_PROPERTIES_FILE = "ditto.properties";
 
     private static ConfigProperties instance;
 
@@ -77,7 +77,7 @@ public final class ConfigProperties {
 
     public static ConfigProperties getInstance() {
         if (null == instance) {
-            final Properties props = readPropertiesFromFile();
+            final Properties props = readPropertiesFromFile(CONFIG_PROPERTIES_FILE);
 
             final String namespace = props.getProperty("namespace");
             final String endpoint = props.getProperty("endpoint");
@@ -101,14 +101,14 @@ public final class ConfigProperties {
         return instance;
     }
 
-    private static Properties readPropertiesFromFile() {
+    public static Properties readPropertiesFromFile(String file) {
         final Properties props = new Properties(System.getProperties());
         try (final InputStream in = ConfigProperties.class.getClassLoader()
-                .getResourceAsStream(CONFIG_PROPERTIES_FILE)) {
+                .getResourceAsStream(file)) {
             props.load(in);
         } catch (final IOException ioe) {
             throw new IllegalStateException(
-                    "File " + CONFIG_PROPERTIES_FILE + " could not be opened but is required for this example: "
+                    "File " + file + " could not be opened but is required for this example: "
                             + ioe.getMessage());
         }
         return props;

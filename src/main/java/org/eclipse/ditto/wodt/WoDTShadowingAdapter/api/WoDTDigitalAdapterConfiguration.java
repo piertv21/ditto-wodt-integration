@@ -18,8 +18,11 @@ package org.eclipse.ditto.wodt.WoDTShadowingAdapter.api;
 
 import java.net.URI;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
+import org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl.WoDTDigitalAdapter;
+import static org.eclipse.ditto.wodt.common.ConfigProperties.readPropertiesFromFile;
 import org.eclipse.ditto.wodt.model.ontology.DTOntology;
 
 /**
@@ -41,14 +44,15 @@ public final class WoDTDigitalAdapterConfiguration {
     * @param platformToRegister the platforms to which register
     */
     public WoDTDigitalAdapterConfiguration(
-            final String digitalTwinUri,
-            final DTOntology ontology,
-            final int portNumber,
-            final String physicalAssetId,
-            final Set<URI> platformToRegister) {
-        this.digitalTwinUri = digitalTwinUri;
+        final DTOntology ontology,
+        final String physicalAssetId,
+        final Set<URI> platformToRegister
+    ) {
+        Properties properties = readPropertiesFromFile("config.properties");
+        this.digitalTwinUri =
+            properties.getProperty("base_url") + ":" + properties.getProperty("port");
         this.ontology = ontology;
-        this.portNumber = portNumber;
+        this.portNumber = Integer.parseInt(properties.getProperty("port"));
         this.physicalAssetId = physicalAssetId;
         this.platformToRegister = new HashSet<>(platformToRegister);
     }
