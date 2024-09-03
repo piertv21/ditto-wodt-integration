@@ -1,5 +1,6 @@
 package org.eclipse.ditto.wodt;
 
+import org.eclipse.ditto.wodt.ontologies.FloorLampDTOntology;
 import org.junit.jupiter.api.Test;
 
 public class WoDTAdapterTest {

@@ -1,4 +1,4 @@
-package org.eclipse.ditto.wodt;
+package org.eclipse.ditto.wodt.ontologies;
 
 import java.util.HashMap;
 import java.util.Map;
