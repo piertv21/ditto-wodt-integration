@@ -199,20 +199,4 @@ public class JenaDTKGEngine implements DTKGEngine {
         modelConsumer.accept(this.dtkgModel);
         this.dtkgModel.leaveCriticalSection();
     }
-
-    @Override
-    public void addEvent(String event) {
-        this.writeModel(model ->
-                this.digitalTwinResource.addLiteral(
-                        this.dtkgModel.createProperty(WoDTVocabulary.AVAILABLE_ACTION_ID.getUri()),
-                        event
-                )
-        );
-        this.notifyObservers();
-    }
-
-    @Override
-    public boolean removeEvent(String event) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 }

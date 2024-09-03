@@ -29,29 +29,25 @@ public class ThingUtils {
 
     private static final HttpClient httpClient = HttpClient.newHttpClient();
 
-    // TO DO: rimuovi l'estrazione di additionalData dagli eventi e dal ThingModelElement
-
     /**
      * Extract some information exploring a Thing model hierarchically.
      * Output: List of lists.
      * [0] = Context extensions list with element: (alias, URL)
-     * [1] = Properties list with element: (name, featureName?, additionalData?)
-     * [2] = Actions list with element: (name, featureName?, additionalData?)
-     * [3] = Events list with element: (name, featureName?, additionalData?)
-     * [4] = Relationships list with element: (name, featureName?, additionalData?)
+     * [1] = Properties list with element: (name, featureName?)
+     * [2] = Actions list with element: (name, featureName?)
+     * [3] = Events list with element: (name, featureName?)
      */
     public static List<List<ThingModelElement>> extractDataFromThing(Thing thing) {
         List<ThingModelElement> contextExtensionsList = new ArrayList<>();
         List<ThingModelElement> propertiesList = new ArrayList<>();
         List<ThingModelElement> actionsList = new ArrayList<>();
         List<ThingModelElement> eventsList = new ArrayList<>();
-        List<ThingModelElement> relationshipsList = new ArrayList<>();
 
         // Current Thing
         extractDataFromCurrentModel(
             thing.getDefinition().get().toString(), "",
             contextExtensionsList, propertiesList,
-            actionsList, eventsList, relationshipsList
+            actionsList, eventsList
         );
 
         // Submodels
@@ -62,7 +58,7 @@ public class ThingUtils {
                     extractDataFromCurrentModel(
                         def.getFirstIdentifier().toString(), featureName,
                         contextExtensionsList, propertiesList,
-                        actionsList, eventsList, relationshipsList
+                        actionsList, eventsList
                     );
                 });
             });
@@ -73,21 +69,16 @@ public class ThingUtils {
         result.add(propertiesList);
         result.add(actionsList);
         result.add(eventsList);
-        result.add(relationshipsList);
         return result;
     }
-
-    /**
-     * Extract some information from a Thing model.
-     */
+    
     private static void extractDataFromCurrentModel(
-            String url,
-            String featureName,
-            List<ThingModelElement> contextExtensionsList,
-            List<ThingModelElement> propertiesList,
-            List<ThingModelElement> actionsList,
-            List<ThingModelElement> eventsList,
-            List<ThingModelElement> relationshipsList
+        String url,
+        String featureName,
+        List<ThingModelElement> contextExtensionsList,
+        List<ThingModelElement> propertiesList,
+        List<ThingModelElement> actionsList,
+        List<ThingModelElement> eventsList
     ) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -105,13 +96,13 @@ public class ThingUtils {
                         for (Map.Entry<String, JsonElement> entry : contextObj.entrySet()) {
                             String alias = entry.getKey();
                             String contextUrl = entry.getValue().getAsString();
-                            addModelElement(contextExtensionsList, new ThingModelElement(alias, Optional.of(contextUrl), Optional.empty()));
+                            addModelElement(contextExtensionsList, new ThingModelElement(alias, Optional.of(contextUrl)));
                         }
                     }
                 }
             }
 
-            // Properties and Relationships
+            // Properties
             if (jsonObject.has("properties")) {
                 JsonObject properties = jsonObject.getAsJsonObject("properties");
                 for (String propertyKey : properties.keySet()) {
@@ -122,14 +113,10 @@ public class ThingUtils {
                         JsonObject subProperties = property.getAsJsonObject("properties");
                         for (String subPropertyKey : subProperties.keySet()) {
                             String complexPropertyKey = propertyKey + "_" + subPropertyKey;
-                            addModelElement(propertiesList, new ThingModelElement(complexPropertyKey, Optional.of(featureName), Optional.empty()));
+                            addModelElement(propertiesList, new ThingModelElement(complexPropertyKey, Optional.of(featureName)));
                         }
                     } else {
-                        if (propertyKey.startsWith("rel-")) {
-                            addModelElement(relationshipsList, new ThingModelElement(propertyKey, Optional.of(featureName), Optional.empty()));
-                        } else {
-                            addModelElement(propertiesList, new ThingModelElement(propertyKey, Optional.of(featureName), Optional.empty()));
-                        }
+                        addModelElement(propertiesList, new ThingModelElement(propertyKey, Optional.of(featureName)));
                     }
                 }
             }
@@ -138,7 +125,7 @@ public class ThingUtils {
             if (jsonObject.has("actions")) {
                 JsonObject actions = jsonObject.getAsJsonObject("actions");
                 for (String actionKey : actions.keySet()) {
-                    addModelElement(actionsList, new ThingModelElement(actionKey, Optional.of(featureName), Optional.empty()));
+                    addModelElement(actionsList, new ThingModelElement(actionKey, Optional.of(featureName)));
                 }
             }
 
@@ -146,16 +133,7 @@ public class ThingUtils {
             if (jsonObject.has("events")) {
                 JsonObject events = jsonObject.getAsJsonObject("events");
                 for (String eventKey : events.keySet()) {
-                    JsonObject event = events.getAsJsonObject(eventKey);
-                    Optional<String> additionalData = Optional.empty();
-                    if (event.has("data")) {
-                        additionalData = Optional.of(event.getAsJsonObject("data").toString());
-                    }
-                    addModelElement(eventsList, new ThingModelElement(
-                        eventKey,
-                        Optional.of(featureName),
-                        additionalData
-                    ));
+                    addModelElement(eventsList, new ThingModelElement(eventKey, Optional.of(featureName)));
                 }
             }
 
@@ -169,10 +147,10 @@ public class ThingUtils {
                         if ("tm:submodel".equals(rel)) {
                             String href = link.get("href").getAsString();
                             String instanceName = link.has("instanceName") ? link.get("instanceName").getAsString() : "";
-                            extractDataFromCurrentModel(href, instanceName, contextExtensionsList, propertiesList, actionsList, eventsList, relationshipsList);
+                            extractDataFromCurrentModel(href, instanceName, contextExtensionsList, propertiesList, actionsList, eventsList);
                         } else if ("tm:extends".equals(rel)) {
                             String href = link.get("href").getAsString();
-                            extractDataFromCurrentModel(href, featureName, contextExtensionsList, propertiesList, actionsList, eventsList, relationshipsList);
+                            extractDataFromCurrentModel(href, featureName, contextExtensionsList, propertiesList, actionsList, eventsList);
                         }
                     }
                 });                
@@ -182,6 +160,9 @@ public class ThingUtils {
         }
     }
 
+    /*
+     * Convert a string to a specific type.
+     */
     public static Object convertStringToType(String input) {
         // null
         if (input == null || input.equalsIgnoreCase("null")) {
@@ -228,6 +209,9 @@ public class ThingUtils {
         return input.replace("\"", "");
     }
 
+    /*
+     * Extract the names of the sub-properties of a JSON property.
+     */
     public static List<String> extractSubPropertiesNames(final String jsonProperty) {
         List<String> subProperties = new ArrayList<>();
         ObjectMapper objectMapper = new ObjectMapper();
@@ -245,7 +229,10 @@ public class ThingUtils {
         }
         return subProperties;
     }
-    
+
+    /*
+     * Extract the value of a sub-property of a JSON property.
+     */
     public static String extractSubPropertyValue(final String jsonValue, final String key) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -260,10 +247,6 @@ public class ThingUtils {
         return null;
     }
 
-    /**
-     * Add a model element to the list if it is not already present,
-     * so that duplicates are avoided but the order is preserved.
-     */
     private static void addModelElement(List<ThingModelElement> list, ThingModelElement element) {
         if (!list.contains(element)) {
             list.add(element);

@@ -21,7 +21,7 @@ import org.eclipse.ditto.wodt.model.ontology.Node;
 import org.eclipse.ditto.wodt.model.ontology.Property;
 
 /**
- * This interface models the DTKGEngine component of the Abstract Architecture in a compatible way with Ditto. TO DO: modifica per ditto + events
+ * This interface models the DTKGEngine component of the Abstract Architecture in a compatible way with Ditto.
 */
 public interface DTKGEngine extends DTKGEngineReader {
     /**
@@ -70,16 +70,6 @@ public interface DTKGEngine extends DTKGEngineReader {
     * @return true if correctly deleted, false if the action id doesn't exist
     */
     boolean removeActionId(String actionId);
-
-    /*
-     * Add an event to the Digital Twin Knowledge Graph.
-     */
-    void addEvent(String event);
-
-    /**
-     * Remove an event from the Digital Twin Knowledge Graph.
-     */
-    boolean removeEvent(String event);
 
     /**
      * Add a {@link DTKGObserver} that will be notified for each DTKG update.

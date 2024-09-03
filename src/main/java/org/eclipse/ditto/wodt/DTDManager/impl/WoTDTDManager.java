@@ -20,7 +20,9 @@ import io.github.sanecity.wot.thing.Context;
 import io.github.sanecity.wot.thing.ExposedThing;
 import io.github.sanecity.wot.thing.Thing;
 import io.github.sanecity.wot.thing.Type;
+import io.github.sanecity.wot.thing.action.ExposedThingAction;
 import io.github.sanecity.wot.thing.action.ThingAction;
+import io.github.sanecity.wot.thing.event.ExposedThingEvent;
 import io.github.sanecity.wot.thing.event.ThingEvent;
 import io.github.sanecity.wot.thing.form.Form;
 import io.github.sanecity.wot.thing.form.Operation;
@@ -62,9 +64,6 @@ public class WoTDTDManager implements DTDManager {
     private List<ThingModelElement> extractedPropertiesList;
     private List<ThingModelElement> extractedActionsList;
     private List<ThingModelElement> extractedEventsList;
-    private List<ThingModelElement> extractedRelationshipsList;
-
-    // TO DO: migliorare diverse parti del codice (brutte o ripetitive)
 
     /**
      * Default constructor.
@@ -101,7 +100,6 @@ public class WoTDTDManager implements DTDManager {
         this.extractedPropertiesList = extractDataFromThing.get(1);
         this.extractedActionsList = extractDataFromThing.get(2);
         this.extractedEventsList = extractDataFromThing.get(3);
-        this.extractedRelationshipsList = extractDataFromThing.get(4);
     }
 
     @Override
@@ -154,118 +152,101 @@ public class WoTDTDManager implements DTDManager {
             this.actions.forEach((rawActionName, action) ->
                     thingDescription.addAction(rawActionName, action, () -> { }));
             this.events.forEach((rawEventName, event) -> thingDescription.addEvent(rawEventName, event));
-
-            // Add Properties affordances
-            thingDescription.getProperties().forEach((name, property) -> {
-                if(!name.equals("snapshot") && !name.contains("rel-")) {
-                    String[] splitPropertyName = splitStringAtFirstCharOccurrence(name, '_');
-                    ThingModelElement prop;
-                    if(splitPropertyName != null) {
-                        prop = extractedPropertiesList.stream()
-                            .filter(p -> p.getElement().equals(splitPropertyName[1]))
-                            .filter(p -> p.getValue().get().equals(splitPropertyName[0]))
-                            .findFirst()
-                            .orElse(null);
-                    } else {
-                        prop = extractedPropertiesList.stream()
-                            .filter(p -> p.getElement().equals(name))
-                            .findFirst()
-                            .orElse(null);
-                    }
-                    String href = BASE_URL + this.dittoThingId;
-                    if(prop.getValue().isPresent()) {
-                        href += PROPERTY_URL.replace("{featureId}", prop.getValue().get())
-                            .replace("{propertyPath}", splitPropertyName[1].replace("_", "/"));
-                    } else {
-                        href += ATTRIBUTE_URL.replace("{attributePath}", name);
-                    }
-                    property.addForm(new Form.Builder()
-                            .addOp(Operation.READ_PROPERTY)
-                            .setHref(href)
-                            .build());
-                    property.addForm(new Form.Builder()
-                            .addOp(Operation.OBSERVE_PROPERTY)
-                            .setHref(href)
-                            .setSubprotocol("sse")
-                            .build());
-                }
-                if(name.contains("rel-")) {
-                    String href = BASE_URL + this.dittoThingId + ATTRIBUTE_URL.replace("{attributePath}", name);
-                    property.addForm(new Form.Builder()
-                            .addOp(Operation.READ_PROPERTY)
-                            .setHref(href)
-                            .build());
-                    property.addForm(new Form.Builder()
-                            .addOp(Operation.OBSERVE_PROPERTY)
-                            .setHref(href)
-                            .setSubprotocol("sse")
-                            .build());
-                }
-            });
-
-            // Add Actions affordances
-            thingDescription.getActions().forEach((name, action) -> {
-                String[] splitActionName = splitStringAtFirstCharOccurrence(name, '_');
-                ThingModelElement act;
-                if(splitActionName != null) {
-                    act = extractedActionsList.stream()
-                        .filter(a -> a.getElement().equals(splitActionName[1]))
-                        .filter(a -> a.getValue().get().equals(splitActionName[0]))
-                        .findFirst()
-                        .orElse(null);
-                } else {
-                    act = extractedActionsList.stream()
-                        .filter(a -> a.getElement().equals(name))
-                        .findFirst()
-                        .orElse(null);
-                }
-                String href = BASE_URL + this.dittoThingId;
-                if(act.getValue().isPresent()) {
-                    href += FEATURE_URL.replace("{featureId}", act.getValue().get())
-                                + ACTION_URL + splitActionName[1];
-                } else {
-                    href += ACTION_URL + name;
-                }
-                action.addForm(new Form.Builder()
-                        .addOp(Operation.INVOKE_ACTION)
-                        .setHref(href)
-                        .build());
-            });
-
-            // Add Events affordances
-            thingDescription.getEvents().forEach((name, event) -> {
-                String[] splitEventName = splitStringAtFirstCharOccurrence(name, '_');
-                ThingModelElement evt;
-                if(splitEventName != null) {
-                    evt = extractedEventsList.stream()
-                        .filter(e -> e.getElement().equals(splitEventName[1]))
-                        .filter(e -> e.getValue().get().equals(splitEventName[0]))
-                        .findFirst()
-                        .orElse(null);
-                } else {
-                    evt = extractedEventsList.stream()
-                        .filter(e -> e.getElement().equals(name))
-                        .findFirst()
-                        .orElse(null);
-                }
-                String href = BASE_URL + this.dittoThingId;
-                if(evt.getValue().isPresent()) {
-                    href += FEATURE_URL.replace("{featureId}", evt.getValue().get())
-                                + EVENT_URL + splitEventName[1];
-                } else {
-                    href += EVENT_URL + name;
-                }
-                event.addForm(new Form.Builder()
-                        .addOp(Operation.SUBSCRIBE_EVENT)
-                        .setHref(href)
-                        .setSubprotocol("sse")
-                        .build());
-            });
+            
+            thingDescription.getProperties().forEach((name, property) -> 
+                this.addPropertyAffordances(name, property)
+            );
+            thingDescription.getActions().forEach((name, action) -> 
+                this.addActionAffordances(name, action)
+            );
+            thingDescription.getEvents().forEach((name, event) -> 
+                this.addEventAffordances(name, event)
+            );
             return thingDescription;
         } catch (WotException e) {
             throw new IllegalStateException("Impossible to create the WoT DTD Manager in the current state", e);
         }
     }
+
+    private void addPropertyAffordances(String name, ExposedThingProperty<Object> property) {
+        if (!name.equals("snapshot")) {
+            if (name.contains("rel-")) {
+                addRelAffordances(name, property);
+            } else {
+                addStandardPropertyAffordances(name, property);
+            }
+        }
+    }
+
+    private void addStandardPropertyAffordances(String name, ExposedThingProperty<Object> property) {
+        String[] splitName = splitStringAtFirstCharOccurrence(name, '_');
+        ThingModelElement prop = findThingModelElement(extractedPropertiesList, name, splitName);    
+        String href = BASE_URL + this.dittoThingId;
+        if (prop.getValue().isPresent()) {
+            href += PROPERTY_URL.replace("{featureId}", prop.getValue().get())
+                    .replace("{propertyPath}", splitName[1].replace("_", "/"));
+        } else {
+            href += ATTRIBUTE_URL.replace("{attributePath}", name);
+        }    
+        addFormsToProperty(property, href);
+    }
+
+    private void addRelAffordances(String name, ExposedThingProperty<Object> property) {
+        String href = BASE_URL + this.dittoThingId + ATTRIBUTE_URL.replace("{attributePath}", name);
+        addFormsToProperty(property, href);
+    }
+
+    private void addFormsToProperty(ExposedThingProperty<Object> property, String href) {
+        property.addForm(new Form.Builder()
+            .addOp(Operation.READ_PROPERTY)
+            .setHref(href)
+            .build());
+        property.addForm(new Form.Builder()
+            .addOp(Operation.OBSERVE_PROPERTY)
+            .setHref(href)
+            .setSubprotocol("sse")
+            .build());
+    }
+
+    private void addActionAffordances(String name, ExposedThingAction<Object, Object> action) {
+        String[] splitName = splitStringAtFirstCharOccurrence(name, '_');
+        ThingModelElement act = findThingModelElement(extractedActionsList, name, splitName);    
+        String href = BASE_URL + this.dittoThingId;
+        if (act.getValue().isPresent()) {
+            href += FEATURE_URL.replace("{featureId}", act.getValue().get()) + ACTION_URL + splitName[1];
+        } else {
+            href += ACTION_URL + name;
+        }    
+        action.addForm(new Form.Builder()
+            .addOp(Operation.INVOKE_ACTION)
+            .setHref(href)
+            .build());
+    }
+
+    private void addEventAffordances(String name, ExposedThingEvent<Object> event) {
+        String[] splitName = splitStringAtFirstCharOccurrence(name, '_');
+        ThingModelElement evt = findThingModelElement(extractedEventsList, name, splitName);    
+        String href = BASE_URL + this.dittoThingId;
+        if (evt.getValue().isPresent()) {
+            href += FEATURE_URL.replace("{featureId}", evt.getValue().get()) + EVENT_URL + splitName[1];
+        } else {
+            href += EVENT_URL + name;
+        }    
+        event.addForm(new Form.Builder()
+            .addOp(Operation.SUBSCRIBE_EVENT)
+            .setHref(href)
+            .setSubprotocol("sse")
+            .build());
+    }
+
+    private ThingModelElement findThingModelElement(List<ThingModelElement> list, String name, String[] splitName) {
+        return list.stream()
+            .filter(p -> splitName != null 
+                    ? p.getElement().equals(splitName[1]) && p.getValue().get().equals(splitName[0])
+                    : p.getElement().equals(name))
+            .findFirst()
+            .orElse(null);
+    }    
 
     private String[] splitStringAtFirstCharOccurrence(String input, char character) {
         int underscoreIndex = input.indexOf(character);
@@ -277,7 +258,7 @@ public class WoTDTDManager implements DTDManager {
             return null;
         }
     }
-    
+
     private void initializeThingDescription(final ExposedThing thingDescription) {
         thingDescription.setObjectType(new Type(this.ontology.getDigitalTwinType()));
         thingDescription.addProperty(SNAPSHOT_DTD_PROPERTY, new ExposedThingProperty.Builder()
@@ -302,7 +283,7 @@ public class WoTDTDManager implements DTDManager {
         thingDescription.getMetadata().put(WoDTVocabulary.PHYSICAL_ASSET_ID.getUri(), this.physicalAssetId);
         thingDescription.getMetadata().put(WoDTVocabulary.VERSION.getUri(), VERSION);
         
-        /* OLD SOLUTION        
+        /* TO DO: Old solution        
         Map<String, Object> securityDefinitions = new HashMap<>();
         Map<String, String> basicSc = new HashMap<>();
         basicSc.put("in", "header");
@@ -329,10 +310,8 @@ public class WoTDTDManager implements DTDManager {
             if (indicateAugmentation) {
                 metadata.put(WoDTVocabulary.AUGMENTED_INTERACTION.getUri(), false);
             }
-
             return Optional.of(new ThingProperty.Builder()
                     .setObjectType(propertyValueType.get())
-                    //.setType(propertyValueType.get().split("#")[1]) // TO DO: edit qui
                     .setReadOnly(true)
                     .setObservable(true)
                     .setOptionalProperties(metadata)
@@ -379,11 +358,6 @@ public class WoTDTDManager implements DTDManager {
     @Override
     public List<ThingModelElement> getTMEvents() {
         return List.copyOf(this.extractedEventsList);
-    }
-
-    @Override
-    public List<ThingModelElement> getTMRelationships() {
-        return List.copyOf(this.extractedRelationshipsList);
     }
 
     /**
