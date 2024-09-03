@@ -1,4 +1,4 @@
-package org.eclipse.ditto.wodt.DTDManager.impl;
+package org.eclipse.ditto.wodt;
 
 import java.util.HashMap;
 import java.util.Map;

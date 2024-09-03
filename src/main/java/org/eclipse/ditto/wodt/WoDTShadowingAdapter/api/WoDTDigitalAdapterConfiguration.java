@@ -50,9 +50,9 @@ public final class WoDTDigitalAdapterConfiguration {
     ) {
         Properties properties = readPropertiesFromFile("config.properties");
         this.digitalTwinUri =
-            properties.getProperty("base_url") + ":" + properties.getProperty("port");
+            properties.getProperty("module_base_url") + ":" + properties.getProperty("module_port");
         this.ontology = ontology;
-        this.portNumber = Integer.parseInt(properties.getProperty("port"));
+        this.portNumber = Integer.parseInt(properties.getProperty("module_port"));
         this.physicalAssetId = physicalAssetId;
         this.platformToRegister = new HashSet<>(platformToRegister);
     }
