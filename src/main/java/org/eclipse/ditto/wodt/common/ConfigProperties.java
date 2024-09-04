@@ -14,20 +14,11 @@ package org.eclipse.ditto.wodt.common;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class ConfigProperties {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigProperties.class);
 
     private static final String CONFIG_PROPERTIES_FILE = "ditto.properties";
 
@@ -41,7 +32,6 @@ public final class ConfigProperties {
 
     private final String clientId;
     private final String clientSecret;
-    //private final List<String> scopes;
     private final String tokenEndpoint;
 
     private final String proxyHost;
@@ -55,7 +45,6 @@ public final class ConfigProperties {
             final String password,
             final String clientId,
             final String clientSecret,
-            //final List<String> scopes,
             final String tokenEndpoint,
             final String proxyHost,
             final String proxyPort,
@@ -67,7 +56,6 @@ public final class ConfigProperties {
         this.password = password;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
-        //this.scopes = scopes;
         this.tokenEndpoint = tokenEndpoint;
         this.proxyHost = proxyHost;
         this.proxyPort = proxyPort;
@@ -86,7 +74,6 @@ public final class ConfigProperties {
             final String password = props.getProperty("password");
             final String clientId = props.getProperty("clientId");
             final String clientSecret = props.getProperty("clientSecret");
-            //final List<String> scopes = getScopesAsList(props.getProperty("scopes"));
             final String tokenEndpoint = props.getProperty("tokenEndpoint");
 
             final String proxyHost = props.getProperty("proxyHost");
@@ -112,29 +99,6 @@ public final class ConfigProperties {
                             + ioe.getMessage());
         }
         return props;
-    }
-
-    private static List<String> getScopesAsList(final String scopes) {
-        try {
-            if (scopes.length() > 0) {
-                if (scopes.contains(",")) {
-                    return Arrays.stream(scopes.split(",")).collect(Collectors.toList());
-                } else {
-                    return Collections.singletonList(scopes);
-                }
-            }
-        } catch (final Exception e) {
-            LOGGER.warn("Could not get scopes as list!", e);
-        }
-        return Collections.emptyList();
-    }
-
-    Optional<String> getNamespace() {
-        return Optional.ofNullable(namespace);
-    }
-
-    String getNamespaceOrThrow() {
-        return getNamespace().orElseThrow(IllegalStateException::new);
     }
 
     Optional<String> getEndpoint() {
@@ -177,10 +141,6 @@ public final class ConfigProperties {
         return getClientSecret().orElseThrow(IllegalStateException::new);
     }
 
-    /*List<String> getScopes() {
-        return scopes;
-    }*/
-
     Optional<String> getTokenEndpoint() {
         return Optional.ofNullable(tokenEndpoint);
     }
@@ -193,32 +153,16 @@ public final class ConfigProperties {
         return Optional.ofNullable(proxyHost);
     }
 
-    String getProxyHostOrThrow() {
-        return getProxyHost().orElseThrow(IllegalStateException::new);
-    }
-
     Optional<String> getProxyPort() {
         return Optional.ofNullable(proxyPort);
-    }
-
-    String getProxyPortOrThrow() {
-        return getProxyPort().orElseThrow(IllegalStateException::new);
     }
 
     Optional<String> getProxyPrincipal() {
         return Optional.ofNullable(proxyPrincipal);
     }
 
-    String getProxyPrincipalOrThrow() {
-        return getProxyPrincipal().orElseThrow(IllegalStateException::new);
-    }
-
     Optional<String> getProxyPassword() {
         return Optional.ofNullable(proxyPassword);
-    }
-
-    String getProxyPasswordOrThrow() {
-        return getProxyPassword().orElseThrow(IllegalStateException::new);
     }
 
     @Override
@@ -236,7 +180,6 @@ public final class ConfigProperties {
                 Objects.equals(password, that.password) &&
                 Objects.equals(clientId, that.clientId) &&
                 Objects.equals(clientSecret, that.clientSecret) &&
-                //Objects.equals(scopes, that.scopes) &&
                 Objects.equals(tokenEndpoint, that.tokenEndpoint) &&
                 Objects.equals(proxyHost, that.proxyHost) &&
                 Objects.equals(proxyPort, that.proxyPort) &&
@@ -259,7 +202,6 @@ public final class ConfigProperties {
                 ", password=" + password +
                 ", clientId=" + clientId +
                 ", clientSecret=" + clientSecret +
-                //", scopes=" + scopes +
                 ", tokenEndpoint=" + tokenEndpoint +
                 ", proxyHost=" + proxyHost +
                 ", proxyPort=" + proxyPort +

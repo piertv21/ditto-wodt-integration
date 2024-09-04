@@ -19,7 +19,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.ditto.base.model.auth.AuthorizationSubject;
 import org.eclipse.ditto.base.model.json.JsonSchemaVersion;
 import org.eclipse.ditto.client.DisconnectedDittoClient;
 import org.eclipse.ditto.client.DittoClient;
@@ -50,7 +49,6 @@ public class DittoBase {
     private static final ConfigProperties CONFIG_PROPERTIES = ConfigProperties.getInstance();
     private static final int TIMEOUT = 10;
     private final DittoClient client;
-    private AuthorizationSubject authorizationSubject;
 
     public DittoBase() {
         try {
@@ -89,21 +87,18 @@ public class DittoBase {
                     .username(CONFIG_PROPERTIES.getUsernameOrThrow())
                     .password(CONFIG_PROPERTIES.getPasswordOrThrow())
                     .build());
-            authorizationSubject = AuthorizationSubject.newInstance("nginx:" + CONFIG_PROPERTIES.getUsernameOrThrow());
         } else if (CONFIG_PROPERTIES.getClientId().isPresent()) {
             final ClientCredentialsAuthenticationConfiguration.ClientCredentialsAuthenticationConfigurationBuilder
                     clientCredentialsAuthenticationConfigurationBuilder =
                     ClientCredentialsAuthenticationConfiguration.newBuilder()
                             .clientId(CONFIG_PROPERTIES.getClientIdOrThrow())
                             .clientSecret(CONFIG_PROPERTIES.getClientSecretOrThrow())
-                            //.scopes(CONFIG_PROPERTIES.getScopes())
                             .tokenEndpoint(CONFIG_PROPERTIES.getTokenEndpointOrThrow());
             final Optional<ProxyConfiguration> proxyConfiguration = proxyConfiguration();
             proxyConfiguration.ifPresent(clientCredentialsAuthenticationConfigurationBuilder::proxyConfiguration);
             authenticationProvider =
                     AuthenticationProviders.clientCredentials(clientCredentialsAuthenticationConfigurationBuilder
                             .build());
-            authorizationSubject = AuthorizationSubject.newInstance(CONFIG_PROPERTIES.getClientId().toString());
         } else {
             throw new IllegalStateException("No authentication configured in config.properties!");
         }
@@ -111,10 +106,6 @@ public class DittoBase {
         return authenticationProvider;
     }
 
-    /**
-     * Sets up a serializer/deserializer for the {@link org.eclipse.ditto.User.common.model.ExampleUser} model class
-     * which uses Jackson in order to serialize and deserialize messages which should directly be mapped to this type.
-     */
     private MessageSerializerRegistry buildMessageSerializerRegistry() {
         final ObjectMapper objectMapper = new ObjectMapper();
         final MessageSerializerRegistry messageSerializerRegistry =

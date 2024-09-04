@@ -161,7 +161,7 @@ public class ThingUtils {
     }
 
     /*
-     * Convert a string to a specific type.
+     * Convert a string to its corresponding type.
      */
     public static Object convertStringToType(String input) {
         // null
