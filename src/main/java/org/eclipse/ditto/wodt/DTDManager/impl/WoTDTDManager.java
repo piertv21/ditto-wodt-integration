@@ -283,16 +283,6 @@ public class WoTDTDManager implements DTDManager {
         thingDescription.getMetadata().put(WoDTVocabulary.PHYSICAL_ASSET_ID.getUri(), this.physicalAssetId);
         thingDescription.getMetadata().put(WoDTVocabulary.VERSION.getUri(), VERSION);
         
-        /* TO DO: Old solution        
-        Map<String, Object> securityDefinitions = new HashMap<>();
-        Map<String, String> basicSc = new HashMap<>();
-        basicSc.put("in", "header");
-        basicSc.put("scheme", "basic");
-        securityDefinitions.put("basic_sc", basicSc);
-
-        thingDescription.getMetadata().put("securityDefinitions", securityDefinitions);
-        thingDescription.getMetadata().put("security", "basic_sc");*/
-        
         thingDescription.setSecurityDefinitions(Map.of("basic_sc", new BasicSecurityScheme("header")));
         thingDescription.setSecurity(List.of("basic_sc"));
     }
