@@ -167,24 +167,24 @@ public final class WoDTDigitalAdapter {
                 });
 
                 this.dtdManager.getTMActions().stream()
-                        .filter(action -> action.getValue().isPresent() && action.getValue().get().equals(feature.getId()))
-                        .forEach(action -> handleAction(action.getElement(), false, feature.getId()));
+                        .filter(action -> action.getFeature().isPresent() && action.getFeature().get().equals(feature.getId()))
+                        .forEach(action -> handleAction(action.getField(), false, feature.getId()));
 
                 this.dtdManager.getTMEvents().stream()
-                        .filter(event -> event.getValue().isPresent() && event.getValue().get().equals(feature.getId()))
-                        .forEach(event -> handleEvent(event.getElement(), false, feature.getId()));
+                        .filter(event -> event.getFeature().isPresent() && event.getFeature().get().equals(feature.getId()))
+                        .forEach(event -> handleEvent(event.getField(), false, feature.getId()));
             });
         });
 
         // Thing Actions
         this.dtdManager.getTMActions().stream()
-                .filter(action -> action.getValue().isEmpty())
-                .forEach(action -> handleAction(action.getElement(), false, null));
+                .filter(action -> action.getFeature().isEmpty())
+                .forEach(action -> handleAction(action.getField(), false, null));
 
         // Thing Events
         this.dtdManager.getTMEvents().stream()
-                .filter(event -> event.getValue().isEmpty())
-                .forEach(event -> handleEvent(event.getElement(), false, null));
+                .filter(event -> event.getFeature().isEmpty())
+                .forEach(event -> handleEvent(event.getField(), false, null));
     }
 
     public void onThingChange(ThingChange change) {
@@ -216,12 +216,12 @@ public final class WoDTDigitalAdapter {
                             });
                         });
                         this.dtdManager.getTMActions().stream()
-                                .filter(action -> action.getValue().isPresent() && action.getValue().get().equals(feature.getId()))
-                                .forEach(action -> handleAction(action.getElement(), false, feature.getId()));
+                                .filter(action -> action.getFeature().isPresent() && action.getFeature().get().equals(feature.getId()))
+                                .forEach(action -> handleAction(action.getField(), false, feature.getId()));
 
                         this.dtdManager.getTMEvents().stream()
-                                .filter(event -> event.getValue().isPresent() && event.getValue().get().equals(feature.getId()))
-                                .forEach(event -> handleEvent(event.getElement(), false, feature.getId()));
+                                .filter(event -> event.getFeature().isPresent() && event.getFeature().get().equals(feature.getId()))
+                                .forEach(event -> handleEvent(event.getField(), false, feature.getId()));
                     });
                 }
                 break;
@@ -236,17 +236,17 @@ public final class WoDTDigitalAdapter {
                 }
                 if (change.getPath().toString().contains("features")) {
                     List<ThingModelElement> matchingProperties = this.dtdManager.getTMProperties().stream()
-                            .filter(p -> p.getValue().isPresent() && p.getValue().get().equals(elementToDelete))
+                            .filter(p -> p.getFeature().isPresent() && p.getFeature().get().equals(elementToDelete))
                             .collect(Collectors.toList());
-                    matchingProperties.forEach(prop -> handleProperty(prop.getElement(), null, true, true, elementToDelete));
+                    matchingProperties.forEach(prop -> handleProperty(prop.getField(), null, true, true, elementToDelete));
 
                     this.dtdManager.getTMActions().stream()
-                            .filter(action -> action.getValue().isPresent() && action.getValue().get().equals(elementToDelete))
-                            .forEach(action -> handleAction(action.getElement(), true, elementToDelete));
+                            .filter(action -> action.getFeature().isPresent() && action.getFeature().get().equals(elementToDelete))
+                            .forEach(action -> handleAction(action.getField(), true, elementToDelete));
 
                     this.dtdManager.getTMEvents().stream()
-                            .filter(event -> event.getValue().isPresent() && event.getValue().get().equals(elementToDelete))
-                            .forEach(event -> handleEvent(event.getElement(), true, elementToDelete));
+                            .filter(event -> event.getFeature().isPresent() && event.getFeature().get().equals(elementToDelete))
+                            .forEach(event -> handleEvent(event.getField(), true, elementToDelete));
                 }
                 break;
             default:

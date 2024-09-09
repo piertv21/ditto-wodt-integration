@@ -3,15 +3,19 @@ package org.eclipse.ditto.wodt.common;
 import java.util.Optional;
 
 /*
- * Class representing a Thing Model element.
+ * Class representing a Thing Model field.
  */
 public class ThingModelElement {
-    private final String element;
-    private final Optional<String> value;
+    private final String field;
+    private final Optional<String> feature;
+    private final Optional<String> type;
+    private final Optional<String> domainPredicate;
 
-    public ThingModelElement(String element, Optional<String> value) {
-        this.element = element;
-        this.value = (value.isPresent() && !value.get().isEmpty()) ? value : Optional.empty();
+    public ThingModelElement(String field, Optional<String> feature, Optional<String> type, Optional<String> domainPredicate) {
+        this.field = field;
+        this.feature = (feature.isPresent() && !feature.get().isEmpty()) ? feature : Optional.empty();
+        this.type = (type.isPresent() && !type.get().isEmpty()) ? type : Optional.empty();
+        this.domainPredicate = (domainPredicate.isPresent() && !domainPredicate.get().isEmpty()) ? domainPredicate : Optional.empty();
     }
 
     @Override
@@ -21,30 +25,44 @@ public class ThingModelElement {
 
         ThingModelElement that = (ThingModelElement) o;
         
-        if (!element.equals(that.element)) return false;
-        return value.equals(that.value);
+        if (!field.equals(that.field)) return false;
+        if (!feature.equals(that.feature)) return false;
+        if (!type.equals(that.type)) return false;
+        return domainPredicate.equals(that.domainPredicate);
     }
 
     @Override
     public int hashCode() {
-        int result = element.hashCode();
-        result = 31 * result + value.hashCode();
+        int result = field.hashCode();
+        result = 31 * result + feature.hashCode();
+        result = 31 * result + type.hashCode();
+        result = 31 * result + domainPredicate.hashCode();
         return result;
     }
 
     @Override
     public String toString() {
         return "ThingModelElement{" +
-                "element='" + element + '\'' +
-                ", value=" + value +
+                "field='" + field + '\'' +
+                ", feature=" + feature +
+                ", type=" + type +
+                ", domainPredicate=" + domainPredicate +
                 '}';
     }
 
-    public String getElement() {
-        return this.element;
+    public String getField() {
+        return this.field;
     }
 
-    public Optional<String> getValue() {
-        return this.value;
+    public Optional<String> getFeature() {
+        return this.feature;
+    }
+
+    public Optional<String> getType() {
+        return this.type;
+    }
+
+    public Optional<String> getDomainPredicate() {
+        return this.domainPredicate;
     }
 }

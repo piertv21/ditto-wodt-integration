@@ -139,7 +139,7 @@ public class WoTDTDManager implements DTDManager {
         try {
             Context context = new Context(THING_DESCRIPTION_CONTEXT);
             extractedContextExtensionsList.forEach(contextExtensions ->
-                context.addContext(contextExtensions.getElement(), contextExtensions.getValue().get())
+                context.addContext(contextExtensions.getField(), contextExtensions.getFeature().get())
             );
             final ExposedThing thingDescription = new DefaultWot().produce(new Thing.Builder()
                     .setId(this.digitalTwinUri)
@@ -182,8 +182,8 @@ public class WoTDTDManager implements DTDManager {
         String[] splitName = splitStringAtFirstCharOccurrence(name, '_');
         ThingModelElement prop = findThingModelElement(extractedPropertiesList, name, splitName);    
         String href = BASE_URL + this.dittoThingId;
-        if (prop.getValue().isPresent()) {
-            href += PROPERTY_URL.replace("{featureId}", prop.getValue().get())
+        if (prop.getFeature().isPresent()) {
+            href += PROPERTY_URL.replace("{featureId}", prop.getFeature().get())
                     .replace("{propertyPath}", splitName[1].replace("_", "/"));
         } else {
             href += ATTRIBUTE_URL.replace("{attributePath}", name);
@@ -212,8 +212,8 @@ public class WoTDTDManager implements DTDManager {
         String[] splitName = splitStringAtFirstCharOccurrence(name, '_');
         ThingModelElement act = findThingModelElement(extractedActionsList, name, splitName);    
         String href = BASE_URL + this.dittoThingId;
-        if (act.getValue().isPresent()) {
-            href += FEATURE_URL.replace("{featureId}", act.getValue().get()) + ACTION_URL + splitName[1];
+        if (act.getFeature().isPresent()) {
+            href += FEATURE_URL.replace("{featureId}", act.getFeature().get()) + ACTION_URL + splitName[1];
         } else {
             href += ACTION_URL + name;
         }    
@@ -227,8 +227,8 @@ public class WoTDTDManager implements DTDManager {
         String[] splitName = splitStringAtFirstCharOccurrence(name, '_');
         ThingModelElement evt = findThingModelElement(extractedEventsList, name, splitName);    
         String href = BASE_URL + this.dittoThingId;
-        if (evt.getValue().isPresent()) {
-            href += FEATURE_URL.replace("{featureId}", evt.getValue().get()) + EVENT_URL + splitName[1];
+        if (evt.getFeature().isPresent()) {
+            href += FEATURE_URL.replace("{featureId}", evt.getFeature().get()) + EVENT_URL + splitName[1];
         } else {
             href += EVENT_URL + name;
         }    
@@ -242,8 +242,8 @@ public class WoTDTDManager implements DTDManager {
     private ThingModelElement findThingModelElement(List<ThingModelElement> list, String name, String[] splitName) {
         return list.stream()
             .filter(p -> splitName != null 
-                    ? p.getElement().equals(splitName[1]) && p.getValue().get().equals(splitName[0])
-                    : p.getElement().equals(name))
+                    ? p.getField().equals(splitName[1]) && p.getFeature().get().equals(splitName[0])
+                    : p.getField().equals(name))
             .findFirst()
             .orElse(null);
     }    

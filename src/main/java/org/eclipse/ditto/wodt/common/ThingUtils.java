@@ -32,10 +32,10 @@ public class ThingUtils {
     /**
      * Extract some information exploring a Thing model hierarchically.
      * Output: List of lists.
-     * [0] = Context extensions list with element: (alias, URL)
-     * [1] = Properties list with element: (name, featureName?)
-     * [2] = Actions list with element: (name, featureName?)
-     * [3] = Events list with element: (name, featureName?)
+     * [0] = Context extensions list with element:              (alias, URL)
+     * [1] = Properties and Relationships list with element:    (name, featureName?, type?, domainPredicate?)
+     * [2] = Actions list with element:                         (name, featureName?, type?)
+     * [3] = Events list with element:                          (name, featureName?, type?)
      */
     public static List<List<ThingModelElement>> extractDataFromThing(Thing thing) {
         List<ThingModelElement> contextExtensionsList = new ArrayList<>();
@@ -71,7 +71,7 @@ public class ThingUtils {
         result.add(eventsList);
         return result;
     }
-    
+
     private static void extractDataFromCurrentModel(
         String url,
         String featureName,
@@ -96,7 +96,7 @@ public class ThingUtils {
                         for (Map.Entry<String, JsonElement> entry : contextObj.entrySet()) {
                             String alias = entry.getKey();
                             String contextUrl = entry.getValue().getAsString();
-                            addModelElement(contextExtensionsList, new ThingModelElement(alias, Optional.of(contextUrl)));
+                            addModelElement(contextExtensionsList, new ThingModelElement(alias, Optional.of(contextUrl), Optional.empty(), Optional.empty()));
                         }
                     }
                 }
@@ -106,17 +106,23 @@ public class ThingUtils {
             if (jsonObject.has("properties")) {
                 JsonObject properties = jsonObject.getAsJsonObject("properties");
                 for (String propertyKey : properties.keySet()) {
-                    JsonObject property = properties.getAsJsonObject(propertyKey);
-                    boolean isComplex = "object".equals(property.get("type").getAsString());
-
-                    if (isComplex && property.has("properties")) {
+                    JsonObject property = properties.getAsJsonObject(propertyKey);        
+                    Optional<String> type = property.has("@type") ? Optional.of(property.get("@type").getAsString()) : Optional.empty();
+                    Optional<String> domainPredicate = property.has("https://purl.org/wodt/domainPredicate")
+                        ? Optional.of(property.get("https://purl.org/wodt/domainPredicate").getAsString()) : Optional.empty();
+                    if (property.has("properties")) {
+                        // Complex properties
                         JsonObject subProperties = property.getAsJsonObject("properties");
                         for (String subPropertyKey : subProperties.keySet()) {
-                            String complexPropertyKey = propertyKey + "_" + subPropertyKey;
-                            addModelElement(propertiesList, new ThingModelElement(complexPropertyKey, Optional.of(featureName)));
+                            JsonObject subProperty = subProperties.getAsJsonObject(subPropertyKey);
+                            Optional<String> subType = subProperty.has("@type") ? Optional.of(subProperty.get("@type").getAsString()) : Optional.empty();
+                            Optional<String> subDomainPredicate = subProperty.has("https://purl.org/wodt/domainPredicate")
+                                ? Optional.of(subProperty.get("https://purl.org/wodt/domainPredicate").getAsString()) : Optional.empty();
+                            addModelElement(propertiesList, new ThingModelElement(propertyKey + "_" + subPropertyKey, Optional.of(featureName), subType, subDomainPredicate));
                         }
                     } else {
-                        addModelElement(propertiesList, new ThingModelElement(propertyKey, Optional.of(featureName)));
+                        // Simple properties
+                        addModelElement(propertiesList, new ThingModelElement(propertyKey, Optional.of(featureName), type, domainPredicate));
                     }
                 }
             }
@@ -125,7 +131,9 @@ public class ThingUtils {
             if (jsonObject.has("actions")) {
                 JsonObject actions = jsonObject.getAsJsonObject("actions");
                 for (String actionKey : actions.keySet()) {
-                    addModelElement(actionsList, new ThingModelElement(actionKey, Optional.of(featureName)));
+                    JsonObject action = actions.getAsJsonObject(actionKey);
+                    Optional<String> type = action.has("@type") ? Optional.of(action.get("@type").getAsString()) : Optional.empty();
+                    addModelElement(actionsList, new ThingModelElement(actionKey, Optional.of(featureName), type, Optional.empty()));
                 }
             }
 
@@ -133,7 +141,12 @@ public class ThingUtils {
             if (jsonObject.has("events")) {
                 JsonObject events = jsonObject.getAsJsonObject("events");
                 for (String eventKey : events.keySet()) {
-                    addModelElement(eventsList, new ThingModelElement(eventKey, Optional.of(featureName)));
+                    JsonObject event = events.getAsJsonObject(eventKey);
+                    Optional<String> type = Optional.empty();
+                    if (event.has("data") && event.getAsJsonObject("data").has("type")) {
+                        type = Optional.of(event.getAsJsonObject("data").get("type").getAsString());
+                    }
+                    addModelElement(eventsList, new ThingModelElement(eventKey, Optional.of(featureName), type, Optional.empty()));
                 }
             }
 
@@ -153,7 +166,7 @@ public class ThingUtils {
                             extractDataFromCurrentModel(href, featureName, contextExtensionsList, propertiesList, actionsList, eventsList);
                         }
                     }
-                });                
+                });
             }
         } catch (IOException | InterruptedException e) {
             System.err.println("Error during thing model parsing: " + url);
