@@ -20,7 +20,7 @@ import java.util.Properties;
 
 public final class ConfigProperties {
 
-    private static final String CONFIG_PROPERTIES_FILE = "ditto.properties";
+    private static final String CONFIG_PROPERTIES_FILE = "config.properties";
 
     private static ConfigProperties instance;
 
