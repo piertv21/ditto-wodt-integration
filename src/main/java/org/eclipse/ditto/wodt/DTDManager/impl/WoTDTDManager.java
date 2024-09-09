@@ -302,6 +302,7 @@ public class WoTDTDManager implements DTDManager {
             }
             return Optional.of(new ThingProperty.Builder()
                     .setObjectType(propertyValueType.get())
+                    .setType("") // Empty auto-added type: "string"
                     .setReadOnly(true)
                     .setObservable(true)
                     .setOptionalProperties(metadata)

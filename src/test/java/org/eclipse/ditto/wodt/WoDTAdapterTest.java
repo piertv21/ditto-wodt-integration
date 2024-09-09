@@ -1,6 +1,6 @@
 package org.eclipse.ditto.wodt;
 
-import org.eclipse.ditto.wodt.ontologies.FloorLampDTOntology;
+import org.eclipse.ditto.wodt.ontologies.BulbHolderDTOntology;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
 
@@ -11,8 +11,8 @@ public class WoDTAdapterTest {
     @Test
     void testAppInitialization() throws InterruptedException {
         WoDTAdapter woDTAdapter = WoDTAdapter.create(
-                "io.eclipseprojects.ditto:floor-lamp-0815",
-                new FloorLampDTOntology(),
+                "io.eclipseprojects.ditto:bulb-holder",
+                new BulbHolderDTOntology(),
                 "http://localhost:5000",
                 "bulbHolderId"
         );
