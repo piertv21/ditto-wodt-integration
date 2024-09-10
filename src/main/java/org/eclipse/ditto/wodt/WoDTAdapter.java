@@ -5,26 +5,24 @@ import java.util.Set;
 
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.api.WoDTDigitalAdapterConfiguration;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl.WoDTDigitalAdapter;
-import org.eclipse.ditto.wodt.model.ontology.DTOntology;
 
 /*
  * Application entry point.
  */
 public class WoDTAdapter {
 
-    private WoDTAdapter(String thingId, DTOntology ontology, String platformUrl, String physicalAssetId) {
-        if (ontology == null || thingId == null || platformUrl == null || physicalAssetId == null) {
+    private WoDTAdapter(String thingId, String yamlOntologyPath, String platformUrl, String physicalAssetId) {
+        if (thingId == null || yamlOntologyPath == null || platformUrl == null || physicalAssetId == null) {
             throw new IllegalArgumentException("Ontology, Thing ID, physicalAssetId and Platform URL cannot be null");
         }
 
         new WoDTDigitalAdapter(
-            "wodt-dt-adapter",
             new WoDTDigitalAdapterConfiguration(
-                    ontology,
-                    physicalAssetId,
-                    Set.of(URI.create(platformUrl))
-            ),
-            thingId
+                thingId,
+                yamlOntologyPath,
+                physicalAssetId,
+                Set.of(URI.create(platformUrl))
+            )
         );
     }
 
@@ -38,11 +36,11 @@ public class WoDTAdapter {
      */
     public static WoDTAdapter create(
         String thingId,
-        DTOntology ontology,
+        String yamlOntologyPath,
         String platformUrl,
         String physicalAssetId
     ) {
-        return new WoDTAdapter(thingId, ontology, platformUrl, physicalAssetId);
+        return new WoDTAdapter(thingId, yamlOntologyPath, platformUrl, physicalAssetId);
     }
     
 }

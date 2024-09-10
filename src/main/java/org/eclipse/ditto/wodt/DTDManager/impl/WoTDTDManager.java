@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 
 import org.eclipse.ditto.wodt.DTDManager.api.DTDManager;
 import org.eclipse.ditto.wodt.PlatformManagementInterface.api.PlatformManagementInterfaceReader;
+import org.eclipse.ditto.wodt.WoDTShadowingAdapter.api.WoDTDigitalAdapterConfiguration;
 import org.eclipse.ditto.wodt.common.ThingModelElement;
-import static org.eclipse.ditto.wodt.common.ThingUtils.extractDataFromThing;
 import org.eclipse.ditto.wodt.model.ontology.DTOntology;
 import org.eclipse.ditto.wodt.model.ontology.Property;
 import org.eclipse.ditto.wodt.model.ontology.WoDTVocabulary;
@@ -54,16 +54,12 @@ public class WoTDTDManager implements DTDManager {
     private final int portNumber;
     private final String dittoThingId;
     private final PlatformManagementInterfaceReader platformManagementInterfaceReader;
+    private final WoDTDigitalAdapterConfiguration configuration;
 
     private final Map<String, ThingProperty<Object>> properties;
     private final Map<String, ThingProperty<Object>> relationships;
     private final Map<String, ThingAction<Object, Object>> actions;
     private final Map<String, ThingEvent<Object>> events;
-    
-    private List<ThingModelElement> extractedContextExtensionsList;
-    private List<ThingModelElement> extractedPropertiesList;
-    private List<ThingModelElement> extractedActionsList;
-    private List<ThingModelElement> extractedEventsList;
 
     /**
      * Default constructor.
@@ -74,32 +70,20 @@ public class WoTDTDManager implements DTDManager {
     * @param platformManagementInterfaceReader the platform management interface reader reference
     */
     public WoTDTDManager(
-        final String digitalTwinUri,
-        final DTOntology ontology,
-        final String physicalAssetId,
-        final int portNumber,
-        final PlatformManagementInterfaceReader platformManagementInterfaceReader,
-        final org.eclipse.ditto.things.model.Thing dittoThing
+        final WoDTDigitalAdapterConfiguration configuration,
+        final PlatformManagementInterfaceReader platformManagementInterfaceReader
     ) {
-        this.dittoThingId = dittoThing.getEntityId().get().toString();
-        this.extractThingModelData(dittoThing);        
-        this.digitalTwinUri = digitalTwinUri;
-        this.ontology = ontology;
-        this.physicalAssetId = physicalAssetId;
-        this.portNumber = portNumber;
+        this.configuration = configuration;
+        this.dittoThingId = configuration.getDittoThing().getEntityId().get().toString();
+        this.digitalTwinUri = configuration.getDigitalTwinUri();
+        this.ontology = configuration.getOntology();
+        this.physicalAssetId = configuration.getPhysicalAssetId();
+        this.portNumber = configuration.getPortNumber();
         this.platformManagementInterfaceReader = platformManagementInterfaceReader;
         this.properties = new HashMap<>();
         this.relationships = new HashMap<>();
         this.actions = new HashMap<>();
         this.events = new HashMap<>();
-    }
-
-    private void extractThingModelData(final org.eclipse.ditto.things.model.Thing dittoThing) {
-        List<List<ThingModelElement>> extractDataFromThing = extractDataFromThing(dittoThing);
-        this.extractedContextExtensionsList = extractDataFromThing.get(0);
-        this.extractedPropertiesList = extractDataFromThing.get(1);
-        this.extractedActionsList = extractDataFromThing.get(2);
-        this.extractedEventsList = extractDataFromThing.get(3);
     }
 
     @Override
@@ -138,7 +122,7 @@ public class WoTDTDManager implements DTDManager {
     public Thing<?, ?, ?> getDTD() {
         try {
             Context context = new Context(THING_DESCRIPTION_CONTEXT);
-            extractedContextExtensionsList.forEach(contextExtensions ->
+            this.configuration.getOntology().getAvailableContextExtensions().forEach(contextExtensions ->
                 context.addContext(contextExtensions.getField(), contextExtensions.getFeature().get())
             );
             final ExposedThing thingDescription = new DefaultWot().produce(new Thing.Builder()
@@ -180,7 +164,7 @@ public class WoTDTDManager implements DTDManager {
 
     private void addStandardPropertyAffordances(String name, ExposedThingProperty<Object> property) {
         String[] splitName = splitStringAtFirstCharOccurrence(name, '_');
-        ThingModelElement prop = findThingModelElement(extractedPropertiesList, name, splitName);    
+        ThingModelElement prop = findThingModelElement(this.configuration.getOntology().getAvailableProperties(), name, splitName);    
         String href = BASE_URL + this.dittoThingId;
         if (prop.getFeature().isPresent()) {
             href += PROPERTY_URL.replace("{featureId}", prop.getFeature().get())
@@ -210,7 +194,7 @@ public class WoTDTDManager implements DTDManager {
 
     private void addActionAffordances(String name, ExposedThingAction<Object, Object> action) {
         String[] splitName = splitStringAtFirstCharOccurrence(name, '_');
-        ThingModelElement act = findThingModelElement(extractedActionsList, name, splitName);    
+        ThingModelElement act = findThingModelElement(this.configuration.getOntology().getAvailableActions(), name, splitName);    
         String href = BASE_URL + this.dittoThingId;
         if (act.getFeature().isPresent()) {
             href += FEATURE_URL.replace("{featureId}", act.getFeature().get()) + ACTION_URL + splitName[1];
@@ -225,7 +209,7 @@ public class WoTDTDManager implements DTDManager {
 
     private void addEventAffordances(String name, ExposedThingEvent<Object> event) {
         String[] splitName = splitStringAtFirstCharOccurrence(name, '_');
-        ThingModelElement evt = findThingModelElement(extractedEventsList, name, splitName);    
+        ThingModelElement evt = findThingModelElement(this.configuration.getOntology().getAvailableEvents(), name, splitName);    
         String href = BASE_URL + this.dittoThingId;
         if (evt.getFeature().isPresent()) {
             href += FEATURE_URL.replace("{featureId}", evt.getFeature().get()) + EVENT_URL + splitName[1];
@@ -334,21 +318,6 @@ public class WoTDTDManager implements DTDManager {
     @Override
     public boolean removeEvent(String rawEventName) {
         return this.events.remove(rawEventName) != null;
-    }
-
-    @Override
-    public List<ThingModelElement> getTMProperties() {
-        return List.copyOf(this.extractedPropertiesList);
-    }
-
-    @Override
-    public List<ThingModelElement> getTMActions() {
-        return List.copyOf(this.extractedActionsList);
-    }
-
-    @Override
-    public List<ThingModelElement> getTMEvents() {
-        return List.copyOf(this.extractedEventsList);
     }
 
     /**

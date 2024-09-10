@@ -1,0 +1,29 @@
+digitalTwinType: "https://ambulanceontology.com/ontology#BulbHolder"
+
+properties:
+  - name: "busy"
+    domainPredicate: "https://ambulanceontology.com/ontology#busy"
+    type: "https://www.w3.org/2001/XMLSchema#boolean"
+  - name: "fuelLevel"
+    domainPredicate: "https://ambulanceontology.com/ontology#fuelLevel"
+    type: "https://www.w3.org/2001/XMLSchema#integer"
+
+relationships:
+  - name: "rel-is_part_of_mission"
+    domainPredicate: "https://ambulanceontology.com/ontology#isPartOfMission"
+    type: "https://missionontology.com/ontology#Mission"
+  - name: "rel-is_approaching"
+    domainPredicate: "https://ambulanceontology.com/ontology#isApproachingIntersection"
+    type: "https://intersectionontology.com/ontology#Intersection"
+
+actions:
+  - name: "toggle-plug-cord-attachment"
+    type: "https://ambulanceontology.com/ontology#TogglePlugCordAttachment"
+  - name: "Bulb_toggle"
+    type: "https://bulbontology.com/ontology#Toggle"
+
+events:
+  - name: "Bulb_burnt-out-bulb"
+    type: "boolean"
+  - name: "overheating"
+    type: "boolean"

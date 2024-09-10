@@ -1,6 +1,5 @@
 package org.eclipse.ditto.wodt;
 
-import org.eclipse.ditto.wodt.ontologies.AmbulanceDTOntology;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
 
@@ -11,10 +10,10 @@ public class WoDTAdapterTest {
     @Test
     void testAppInitialization() throws InterruptedException {
         WoDTAdapter woDTAdapter = WoDTAdapter.create(
-                "io.eclipseprojects.ditto:amb-test",
-                new AmbulanceDTOntology(),
+                "io.eclipseprojects.ditto:floor-lamp-0815",
+                "FloorLampDTOntology.yaml",
                 "http://localhost:5000",
-                "bulbHolderId"
+                "bulbHolderPhysicalAssetId"
         );
 
         assertNotNull(woDTAdapter);

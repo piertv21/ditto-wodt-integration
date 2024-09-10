@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import org.eclipse.ditto.client.changes.ThingChange;
 import org.eclipse.ditto.things.model.Thing;
-import org.eclipse.ditto.things.model.ThingId;
 import org.eclipse.ditto.wodt.DTDManager.api.DTDManager;
 import org.eclipse.ditto.wodt.DTDManager.impl.WoTDTDManager;
 import org.eclipse.ditto.wodt.DTKGEngine.api.DTKGEngine;
@@ -15,11 +14,10 @@ import org.eclipse.ditto.wodt.PlatformManagementInterface.impl.BasePlatformManag
 import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.api.WoDTWebServer;
 import org.eclipse.ditto.wodt.WoDTDigitalTwinInterface.impl.WoDTWebServerImpl;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.api.WoDTDigitalAdapterConfiguration;
-import org.eclipse.ditto.wodt.common.DittoBase;
 import org.eclipse.ditto.wodt.common.ThingModelElement;
-import static org.eclipse.ditto.wodt.common.ThingUtils.convertStringToType;
-import static org.eclipse.ditto.wodt.common.ThingUtils.extractSubPropertiesNames;
-import static org.eclipse.ditto.wodt.common.ThingUtils.extractSubPropertyValue;
+import static org.eclipse.ditto.wodt.common.ThingModelUtils.convertStringToType;
+import static org.eclipse.ditto.wodt.common.ThingModelUtils.extractSubPropertiesNames;
+import static org.eclipse.ditto.wodt.common.ThingModelUtils.extractSubPropertyValue;
 
 /**
 * This class represents the Eclipse Ditto Adapter that allows to implement the WoDT Digital Twin layer
@@ -36,44 +34,26 @@ public final class WoDTDigitalAdapter {
 
     /**
     * Default constructor.
-    * @param digitalAdapterId the id of the Digital Adapter
     * @param configuration the configuration of the Digital Adapter
     */
-    public WoDTDigitalAdapter(
-        final String digitalAdapterId,
-        final WoDTDigitalAdapterConfiguration configuration,
-        final String dittoThingId
-    ) {
-        Thing thing = getDittoThing(dittoThingId);
+    public WoDTDigitalAdapter(final WoDTDigitalAdapterConfiguration configuration) {
         this.configuration = configuration;
         this.platformManagementInterface = new BasePlatformManagementInterface(
-                configuration.getDigitalTwinUri());
+            configuration.getDigitalTwinUri());
         this.dtkgEngine = new JenaDTKGEngine(configuration.getDigitalTwinUri());
         this.dtdManager = new WoTDTDManager(
-                configuration.getDigitalTwinUri(),
-                configuration.getOntology(),
-                configuration.getPhysicalAssetId(),
-                configuration.getPortNumber(),
-                this.platformManagementInterface,
-                thing
+            configuration,
+            this.platformManagementInterface
         );
-        this.syncWithDittoThing(thing);
+        this.syncWithDittoThing(configuration.getDittoThing());
         this.woDTWebServer = new WoDTWebServerImpl(
-                configuration.getPortNumber(),
-                this.dtkgEngine,
-                this.dtdManager,
-                this.platformManagementInterface
+            configuration.getPortNumber(),
+            this.dtkgEngine,
+            this.dtdManager,
+            this.platformManagementInterface
         );
         this.dittoClientThread = new DittoThingListener(this);
-        this.startAdapter();
-    }
-
-    private Thing getDittoThing(String dittoThingId) {
-        return new DittoBase().getClient().twin()
-            .forId(ThingId.of(dittoThingId))
-            .retrieve()
-            .toCompletableFuture()
-            .join();
+        this.startAdapter();        
     }
 
     private void startAdapter() {
@@ -90,17 +70,17 @@ public final class WoDTDigitalAdapter {
 
     private void handleRelationship(String key, boolean isDeletion) {
         configuration.getOntology().obtainPropertyValueType(key).ifPresent(
-                relType -> {
-                    configuration.getOntology().convertRelationship(key, relType).ifPresent(triple -> {
-                        if (isDeletion) {
-                            this.dtkgEngine.removeRelationship(triple.getLeft(), triple.getRight());
-                            this.dtdManager.removeRelationship(key);
-                        } else {
-                            this.dtkgEngine.addRelationship(triple.getLeft(), triple.getRight());
-                            this.dtdManager.addRelationship(key);
-                        }
-                    });
-                }
+            relType -> {
+                configuration.getOntology().convertRelationship(key, relType).ifPresent(triple -> {
+                    if (isDeletion) {
+                        this.dtkgEngine.removeRelationship(triple.getLeft(), triple.getRight());
+                        this.dtdManager.removeRelationship(key);
+                    } else {
+                        this.dtkgEngine.addRelationship(triple.getLeft(), triple.getRight());
+                        this.dtdManager.addRelationship(key);
+                    }
+                });
+            }
         );
     }
     
@@ -166,23 +146,23 @@ public final class WoDTDigitalAdapter {
                     });
                 });
 
-                this.dtdManager.getTMActions().stream()
+                this.configuration.getOntology().getAvailableActions().stream()
                         .filter(action -> action.getFeature().isPresent() && action.getFeature().get().equals(feature.getId()))
                         .forEach(action -> handleAction(action.getField(), false, feature.getId()));
 
-                this.dtdManager.getTMEvents().stream()
-                        .filter(event -> event.getFeature().isPresent() && event.getFeature().get().equals(feature.getId()))
-                        .forEach(event -> handleEvent(event.getField(), false, feature.getId()));
+                this.configuration.getOntology().getAvailableEvents().stream()
+                    .filter(event -> event.getFeature().isPresent() && event.getFeature().get().equals(feature.getId()))
+                    .forEach(event -> handleEvent(event.getField(), false, feature.getId()));
             });
         });
 
         // Thing Actions
-        this.dtdManager.getTMActions().stream()
+        this.configuration.getOntology().getAvailableActions().stream()
                 .filter(action -> action.getFeature().isEmpty())
                 .forEach(action -> handleAction(action.getField(), false, null));
 
         // Thing Events
-        this.dtdManager.getTMEvents().stream()
+        this.configuration.getOntology().getAvailableEvents().stream()
                 .filter(event -> event.getFeature().isEmpty())
                 .forEach(event -> handleEvent(event.getField(), false, null));
     }
@@ -215,11 +195,11 @@ public final class WoDTDigitalAdapter {
                                 }
                             });
                         });
-                        this.dtdManager.getTMActions().stream()
+                        this.configuration.getOntology().getAvailableActions().stream()
                                 .filter(action -> action.getFeature().isPresent() && action.getFeature().get().equals(feature.getId()))
                                 .forEach(action -> handleAction(action.getField(), false, feature.getId()));
 
-                        this.dtdManager.getTMEvents().stream()
+                        this.configuration.getOntology().getAvailableEvents().stream()
                                 .filter(event -> event.getFeature().isPresent() && event.getFeature().get().equals(feature.getId()))
                                 .forEach(event -> handleEvent(event.getField(), false, feature.getId()));
                     });
@@ -235,16 +215,16 @@ public final class WoDTDigitalAdapter {
                     }
                 }
                 if (change.getPath().toString().contains("features")) {
-                    List<ThingModelElement> matchingProperties = this.dtdManager.getTMProperties().stream()
+                    List<ThingModelElement> matchingProperties = this.configuration.getOntology().getAvailableProperties().stream()
                             .filter(p -> p.getFeature().isPresent() && p.getFeature().get().equals(elementToDelete))
                             .collect(Collectors.toList());
                     matchingProperties.forEach(prop -> handleProperty(prop.getField(), null, true, true, elementToDelete));
 
-                    this.dtdManager.getTMActions().stream()
+                    this.configuration.getOntology().getAvailableActions().stream()
                             .filter(action -> action.getFeature().isPresent() && action.getFeature().get().equals(elementToDelete))
                             .forEach(action -> handleAction(action.getField(), true, elementToDelete));
 
-                    this.dtdManager.getTMEvents().stream()
+                    this.configuration.getOntology().getAvailableEvents().stream()
                             .filter(event -> event.getFeature().isPresent() && event.getFeature().get().equals(elementToDelete))
                             .forEach(event -> handleEvent(event.getField(), true, elementToDelete));
                 }

@@ -1,0 +1,26 @@
+digitalTwinType: "https://bhontology.com/ontology#BulbHolder"
+
+properties:
+  - name: "manufacturer"
+    domainPredicate: "https://bhontology.com/ontology#manufacturer"
+    type: "https://www.w3.org/2001/XMLSchema#string"
+  - name: "Bulb_on"
+    domainPredicate: "https://bulbontology.com/ontology#on"
+    type: "https://www.w3.org/2001/XMLSchema#boolean"
+
+relationships:
+  - name: "rel-linked-with"
+    domainPredicate: "https://bhontology.com/ontology#LinkedWith"
+    type: "https://flontology.com/ontology#FloorLamp"
+
+actions:
+  - name: "toggle-plug-cord-attachment"
+    type: "https://bhontology.com/ontology#TogglePlugCordAttachment"
+  - name: "Bulb_toggle"
+    type: "https://bulbontology.com/ontology#Toggle"
+
+events:
+  - name: "Bulb_burnt-out-bulb"
+    type: "boolean"
+  - name: "overheating"
+    type: "boolean"

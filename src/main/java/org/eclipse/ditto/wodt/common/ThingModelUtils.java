@@ -25,9 +25,19 @@ import com.google.gson.JsonSyntaxException;
 /*
  * Utility class for Thing-related operations
  */
-public class ThingUtils {
+public final class ThingModelUtils {
 
     private static final HttpClient httpClient = HttpClient.newHttpClient();
+    private static Optional<String> digitalTwinType;
+    private static List<ThingModelElement> contextExtensionsList;
+    private static List<ThingModelElement> propertiesList;
+    private static List<ThingModelElement> actionsList;
+    private static List<ThingModelElement> eventsList;
+
+    public ThingModelUtils(Thing thing) {
+        digitalTwinType = Optional.empty();
+        this.extractDataFromThing(thing);
+    }
 
     /**
      * Extract some information exploring a Thing model hierarchically.
@@ -37,11 +47,11 @@ public class ThingUtils {
      * [2] = Actions list with element:                         (name, featureName?, type?)
      * [3] = Events list with element:                          (name, featureName?, type?)
      */
-    public static List<List<ThingModelElement>> extractDataFromThing(Thing thing) {
-        List<ThingModelElement> contextExtensionsList = new ArrayList<>();
-        List<ThingModelElement> propertiesList = new ArrayList<>();
-        List<ThingModelElement> actionsList = new ArrayList<>();
-        List<ThingModelElement> eventsList = new ArrayList<>();
+    private void extractDataFromThing(Thing thing) {
+        contextExtensionsList = new ArrayList<>();
+        propertiesList = new ArrayList<>();
+        actionsList = new ArrayList<>();
+        eventsList = new ArrayList<>();
 
         // Current Thing
         extractDataFromCurrentModel(
@@ -63,13 +73,6 @@ public class ThingUtils {
                 });
             });
         });
-
-        List<List<ThingModelElement>> result = new ArrayList<>();
-        result.add(contextExtensionsList);
-        result.add(propertiesList);
-        result.add(actionsList);
-        result.add(eventsList);
-        return result;
     }
 
     private static void extractDataFromCurrentModel(
@@ -86,6 +89,18 @@ public class ThingUtils {
                 .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             JsonObject jsonObject = JsonParser.parseString(response.body()).getAsJsonObject();
+
+            // Digital twin type
+            if (jsonObject.has("@type")) {
+                try {
+                    JsonArray typeArray = jsonObject.getAsJsonArray("@type");
+                    if (typeArray.size() > 1) {
+                        digitalTwinType = Optional.of(typeArray.get(1).getAsString());
+                    }
+                } catch (Exception e) {
+                    // Continue
+                }
+            }
 
             // Context extensions
             if (jsonObject.has("@context")) {
@@ -264,5 +279,25 @@ public class ThingUtils {
         if (!list.contains(element)) {
             list.add(element);
         }
+    }
+
+    public Optional<String> getDigitalTwinType() {
+        return digitalTwinType;
+    }    
+
+    public List<ThingModelElement> getTMContextExtensions() {
+        return List.copyOf(contextExtensionsList);
+    }
+
+    public List<ThingModelElement> getTMProperties() {
+        return List.copyOf(propertiesList);
+    }
+
+    public List<ThingModelElement> getTMActions() {
+        return List.copyOf(actionsList);
+    }
+
+    public List<ThingModelElement> getTMEvents() {
+        return List.copyOf(eventsList);
     }
 }

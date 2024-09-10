@@ -21,19 +21,23 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
+import org.eclipse.ditto.things.model.Thing;
+import org.eclipse.ditto.things.model.ThingId;
+import org.eclipse.ditto.wodt.DTDManager.impl.OntologyManagerImpl;
 import org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl.WoDTDigitalAdapter;
 import static org.eclipse.ditto.wodt.common.ConfigProperties.readPropertiesFromFile;
-import org.eclipse.ditto.wodt.model.ontology.DTOntology;
+import org.eclipse.ditto.wodt.common.DittoBase;
 
 /**
  * Configuration for the {@link WoDTDigitalAdapter}.
 */
 public final class WoDTDigitalAdapterConfiguration {
-    private final DTOntology ontology;
     private final String digitalTwinUri;
     private final int portNumber;
     private final String physicalAssetId;
     private final Set<URI> platformToRegister;
+    private final OntologyManagerImpl ontologyManager;
+    private final Thing thing;
 
     /**
      * Default constructor.
@@ -44,17 +48,34 @@ public final class WoDTDigitalAdapterConfiguration {
     * @param platformToRegister the platforms to which register
     */
     public WoDTDigitalAdapterConfiguration(
-        final DTOntology ontology,
+        final String thingId,
+        final String yamlOntologyPath,
         final String physicalAssetId,
         final Set<URI> platformToRegister
     ) {
         Properties properties = readPropertiesFromFile("config.properties");
-        this.digitalTwinUri =
-            properties.getProperty("module_base_url") + ":" + properties.getProperty("module_port");
-        this.ontology = ontology;
+        this.thing = this.obtainDittoThing(thingId);
+        this.ontologyManager = new OntologyManagerImpl(this.thing, yamlOntologyPath);
+        this.digitalTwinUri = properties.getProperty("module_base_url") + ":" +
+            properties.getProperty("module_port");
         this.portNumber = Integer.parseInt(properties.getProperty("module_port"));
         this.physicalAssetId = physicalAssetId;
         this.platformToRegister = new HashSet<>(platformToRegister);
+    }
+
+    private Thing obtainDittoThing(String dittoThingId) {
+        return new DittoBase().getClient().twin()
+            .forId(ThingId.of(dittoThingId))
+            .retrieve()
+            .toCompletableFuture()
+            .join();
+    }
+
+    /*
+     * Return the Ditto Thing associated with the Digital Twin.
+     */
+    public Thing getDittoThing() {
+        return this.thing;
     }
 
     /**
@@ -69,8 +90,8 @@ public final class WoDTDigitalAdapterConfiguration {
      * Obtain the ontology to describe the Digital Twin data.
     * @return the ontology.
     */
-    public DTOntology getOntology() {
-        return this.ontology;
+    public OntologyManagerImpl getOntology() {
+        return this.ontologyManager;
     }
 
     /**
