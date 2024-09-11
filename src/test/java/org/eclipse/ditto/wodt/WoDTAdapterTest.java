@@ -10,8 +10,8 @@ public class WoDTAdapterTest {
     @Test
     void testAppInitialization() throws InterruptedException {
         WoDTAdapter woDTAdapter = WoDTAdapter.create(
-                "io.eclipseprojects.ditto:floor-lamp-0815",
-                "FloorLampDTOntology.yaml",
+                "io.eclipseprojects.ditto:ambulance",
+                "AmbulanceDTOntology.yaml",
                 "http://localhost:5000",
                 "bulbHolderPhysicalAssetId"
         );

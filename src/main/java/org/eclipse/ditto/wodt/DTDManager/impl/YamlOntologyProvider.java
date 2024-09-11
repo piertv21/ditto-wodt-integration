@@ -12,7 +12,7 @@ import org.yaml.snakeyaml.Yaml;
  * YamlOntologyHandler reads a YAML file containing Ontology information
  * and provides methods to access the parsed content.
  */
-public final class YamlOntologyHandler {
+public final class YamlOntologyProvider {
 
     private final Optional<String> digitalTwinType;
     private final List<Optional<Map<String, String>>> properties;
@@ -23,7 +23,7 @@ public final class YamlOntologyHandler {
      * Constructor that takes the name of a YAML file and parses its content.
      */
     @SuppressWarnings("unchecked")
-    public YamlOntologyHandler(String yamlFileName) {
+    public YamlOntologyProvider(String yamlFileName) {
         try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(yamlFileName)) {
             if (inputStream == null) {
                 throw new IllegalArgumentException("File not found: " + yamlFileName);
@@ -73,14 +73,14 @@ public final class YamlOntologyHandler {
     }
 
     /**
-     * Returns the Digital Twin Type.
+     * Returns the Digital Twin Type from the YAML file.
      */
     public Optional<String> getDigitalTwinType() {
         return digitalTwinType;
     }
 
     /**
-     * Returns the properties and relationships.
+     * Returns the properties and relationships defined in the YAML file.
      */
     public List<Optional<Map<String, String>>> getProperties() {
         return properties;

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.ditto.things.model.Thing;
+import org.eclipse.ditto.wodt.model.ontology.WoDTVocabulary;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -123,16 +124,16 @@ public final class ThingModelUtils {
                 for (String propertyKey : properties.keySet()) {
                     JsonObject property = properties.getAsJsonObject(propertyKey);        
                     Optional<String> type = property.has("@type") ? Optional.of(property.get("@type").getAsString()) : Optional.empty();
-                    Optional<String> domainPredicate = property.has("https://purl.org/wodt/domainPredicate")
-                        ? Optional.of(property.get("https://purl.org/wodt/domainPredicate").getAsString()) : Optional.empty();
+                    Optional<String> domainPredicate = property.has(WoDTVocabulary.DOMAIN_PREDICATE.getUri())
+                        ? Optional.of(property.get(WoDTVocabulary.DOMAIN_PREDICATE.getUri()).getAsString()) : Optional.empty();
                     if (property.has("properties")) {
                         // Complex properties
                         JsonObject subProperties = property.getAsJsonObject("properties");
                         for (String subPropertyKey : subProperties.keySet()) {
                             JsonObject subProperty = subProperties.getAsJsonObject(subPropertyKey);
                             Optional<String> subType = subProperty.has("@type") ? Optional.of(subProperty.get("@type").getAsString()) : Optional.empty();
-                            Optional<String> subDomainPredicate = subProperty.has("https://purl.org/wodt/domainPredicate")
-                                ? Optional.of(subProperty.get("https://purl.org/wodt/domainPredicate").getAsString()) : Optional.empty();
+                            Optional<String> subDomainPredicate = subProperty.has(WoDTVocabulary.DOMAIN_PREDICATE.getUri())
+                                ? Optional.of(subProperty.get(WoDTVocabulary.DOMAIN_PREDICATE.getUri()).getAsString()) : Optional.empty();
                             addModelElement(propertiesList, new ThingModelElement(propertyKey + "_" + subPropertyKey, Optional.of(featureName), subType, subDomainPredicate));
                         }
                     } else {
