@@ -1,6 +1,7 @@
 package org.eclipse.ditto.wodt.common;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -204,7 +205,7 @@ public final class ThingModelUtils {
         }
         // Integer
         try {
-            Integer intValue = Integer.valueOf(input);
+            BigInteger intValue = BigInteger.valueOf(Long.parseLong(input));
             return intValue;
         } catch (NumberFormatException e) {
             // Continue

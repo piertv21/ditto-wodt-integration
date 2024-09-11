@@ -1,4 +1,4 @@
-digitalTwinType: "https://ambulanceontology.com/ontology#BulbHolder"
+digitalTwinType: "https://ambulanceontology.com/ontology#Ambulance"
 
 properties:
   - name: "busy"
@@ -15,15 +15,3 @@ relationships:
   - name: "rel-is_approaching"
     domainPredicate: "https://ambulanceontology.com/ontology#isApproachingIntersection"
     type: "https://intersectionontology.com/ontology#Intersection"
-
-actions:
-  - name: "toggle-plug-cord-attachment"
-    type: "https://ambulanceontology.com/ontology#TogglePlugCordAttachment"
-  - name: "Bulb_toggle"
-    type: "https://bulbontology.com/ontology#Toggle"
-
-events:
-  - name: "Bulb_burnt-out-bulb"
-    type: "boolean"
-  - name: "overheating"
-    type: "boolean"
