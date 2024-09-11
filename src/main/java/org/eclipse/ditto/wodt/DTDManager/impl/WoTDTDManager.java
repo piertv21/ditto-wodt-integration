@@ -110,7 +110,8 @@ public class WoTDTDManager implements DTDManager {
 
     @Override
     public void addAction(final String rawActionName) {
-        this.createThingDescriptionAction(rawActionName).ifPresent(action -> this.actions.put(rawActionName, action));
+        this.createThingDescriptionAction(rawActionName)
+            .ifPresent(action -> this.actions.put(rawActionName, action));
     }
 
     @Override

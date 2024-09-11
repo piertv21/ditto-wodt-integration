@@ -39,15 +39,15 @@ public final class WoDTDigitalAdapter {
     public WoDTDigitalAdapter(final WoDTDigitalAdapterConfiguration configuration) {
         this.configuration = configuration;
         this.platformManagementInterface = new BasePlatformManagementInterface(
-            configuration.getDigitalTwinUri());
-        this.dtkgEngine = new JenaDTKGEngine(configuration.getDigitalTwinUri());
+            this.configuration.getDigitalTwinUri());
+        this.dtkgEngine = new JenaDTKGEngine(this.configuration.getDigitalTwinUri());
         this.dtdManager = new WoTDTDManager(
-            configuration,
+            this.configuration,
             this.platformManagementInterface
         );
-        this.syncWithDittoThing(configuration.getDittoThing());
+        this.syncWithDittoThing(this.configuration.getDittoThing());
         this.woDTWebServer = new WoDTWebServerImpl(
-            configuration.getPortNumber(),
+            this.configuration.getPortNumber(),
             this.dtkgEngine,
             this.dtdManager,
             this.platformManagementInterface
