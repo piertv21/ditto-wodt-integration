@@ -50,10 +50,11 @@ public final class WoDTDigitalAdapterConfiguration {
     public WoDTDigitalAdapterConfiguration(
         final String thingId,
         final String yamlOntologyPath,
+        final String configPath,
         final String physicalAssetId,
         final Set<URI> platformToRegister
     ) {
-        Properties properties = readPropertiesFromFile("config.properties");
+        Properties properties = readPropertiesFromFile(configPath);
         this.thing = this.obtainDittoThing(thingId);
         this.ontologyManager = new OntologyManagerImpl(this.thing, yamlOntologyPath);
         this.digitalTwinUri = properties.getProperty("module_base_url") + ":" +

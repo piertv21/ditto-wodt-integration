@@ -12,6 +12,7 @@ public class WoDTAdapterTest {
         WoDTAdapter woDTAdapter = WoDTAdapter.create(
                 "io.eclipseprojects.ditto:ambulance",
                 "AmbulanceDTOntology.yaml",
+                "config.properties",
                 "http://localhost:5000",
                 "bulbHolderPhysicalAssetId"
         );

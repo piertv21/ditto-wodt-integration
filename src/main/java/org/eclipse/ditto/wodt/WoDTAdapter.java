@@ -11,7 +11,7 @@ import org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl.WoDTDigitalAdapter;
  */
 public class WoDTAdapter {
 
-    private WoDTAdapter(String thingId, String yamlOntologyPath, String platformUrl, String physicalAssetId) {
+    private WoDTAdapter(String thingId, String yamlOntologyPath, String configPath, String platformUrl, String physicalAssetId) {
         if (thingId == null || yamlOntologyPath == null || platformUrl == null || physicalAssetId == null) {
             throw new IllegalArgumentException("Ontology, Thing ID, physicalAssetId and Platform URL cannot be null");
         }
@@ -20,6 +20,7 @@ public class WoDTAdapter {
             new WoDTDigitalAdapterConfiguration(
                 thingId,
                 yamlOntologyPath,
+                configPath,                
                 physicalAssetId,
                 Set.of(URI.create(platformUrl))
             )
@@ -37,10 +38,11 @@ public class WoDTAdapter {
     public static WoDTAdapter create(
         String thingId,
         String yamlOntologyPath,
+        String configPath,
         String platformUrl,
         String physicalAssetId
     ) {
-        return new WoDTAdapter(thingId, yamlOntologyPath, platformUrl, physicalAssetId);
+        return new WoDTAdapter(thingId, yamlOntologyPath, configPath, platformUrl, physicalAssetId);
     }
     
 }
