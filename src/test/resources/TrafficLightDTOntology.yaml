@@ -1,0 +1,15 @@
+digitalTwinType: "https://smartcityontology.com/ontology#TrafficLight"
+
+properties:
+  - name: "is-on"
+    domainPredicate: "https://lampontology.com/ontology#isOn"
+    type: "https://www.w3.org/2001/XMLSchema#boolean"
+
+relationships:
+  - name: "rel-linked-with"
+    domainPredicate: "https://bhontology.com/ontology#LinkedWith"
+    type: "https://flontology.com/ontology#FloorLamp"
+
+actions:
+  - name: "switch"
+    type: "https://lampontology.com/ontology#SwitchCommand"
