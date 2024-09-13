@@ -11,7 +11,7 @@ import org.eclipse.ditto.wodt.WoDTShadowingAdapter.impl.WoDTDigitalAdapter;
  */
 public class WoDTAdapter {
 
-    private WoDTAdapter(String thingId, String yamlOntologyPath, String configPath, String platformUrl, String physicalAssetId) {
+    private WoDTAdapter(String thingId, String yamlOntologyPath, String platformUrl, String physicalAssetId) {
         if (thingId == null || yamlOntologyPath == null || platformUrl == null || physicalAssetId == null) {
             throw new IllegalArgumentException("Ontology, Thing ID, physicalAssetId and Platform URL cannot be null");
         }
@@ -19,8 +19,7 @@ public class WoDTAdapter {
         new WoDTDigitalAdapter(
             new WoDTDigitalAdapterConfiguration(
                 thingId,
-                yamlOntologyPath,
-                configPath,                
+                yamlOntologyPath,         
                 physicalAssetId,
                 Set.of(URI.create(platformUrl))
             )
@@ -38,11 +37,28 @@ public class WoDTAdapter {
     public static WoDTAdapter create(
         String thingId,
         String yamlOntologyPath,
-        String configPath,
         String platformUrl,
         String physicalAssetId
     ) {
-        return new WoDTAdapter(thingId, yamlOntologyPath, configPath, platformUrl, physicalAssetId);
+        return new WoDTAdapter(thingId, yamlOntologyPath, platformUrl, physicalAssetId);
     }
-    
+
+    public static void main(String[] args) {
+        String thingId = System.getenv("THING_ID");
+        String yamlOntologyPath = System.getenv("YAML_ONTOLOGY_PATH");
+        String platformUrl = System.getenv("PLATFORM_URL");
+        String physicalAssetId = System.getenv("PHYSICAL_ASSET_ID");
+                
+        if (thingId == null || yamlOntologyPath == null || platformUrl == null || physicalAssetId == null) {
+            System.err.println("Error: Missing required environment variables.");
+            System.exit(1);
+        }
+        
+        WoDTAdapter adapter = WoDTAdapter.create(
+            thingId,
+            yamlOntologyPath,
+            platformUrl,
+            physicalAssetId
+        );
+    }    
 }

@@ -255,7 +255,7 @@ public class WoTDTDManager implements DTDManager {
         final ThingProperty<?> snapshotProperty = thingDescription.getProperty(SNAPSHOT_DTD_PROPERTY);
         snapshotProperty.addForm(new Form.Builder()
                 .addOp(Operation.OBSERVE_PROPERTY)
-                .setHref("ws://host.docker.internal:" + this.portNumber + "/dtkg")
+                .setHref("ws://localhost:" + this.portNumber + "/dtkg")
                 .setSubprotocol("websocket")
                 .build());
         thingDescription.getMetadata()

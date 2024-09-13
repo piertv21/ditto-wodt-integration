@@ -1,0 +1,47 @@
+services:
+  wodt-dts-platform:
+    image: ghcr.io/webbased-wodt/wodt-dts-platform:1.1.15
+    container_name: wodt-dts-platform
+    network_mode: "host" # problema
+    environment:
+      EXPOSED_PORT: ${PLATFORM_EXPOSED_PORT}
+    ports:
+      - "${PLATFORM_EXPOSED_PORT}:${PLATFORM_EXPOSED_PORT}"
+    healthcheck:
+      test: wget http://localhost:${PLATFORM_EXPOSED_PORT}/wodt || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5m
+
+  ambulance-dt:
+    build: .
+    ports:
+      - "${AMBULANCE_MODULE_PORT}:${AMBULANCE_MODULE_PORT}"
+    depends_on:
+      wodt-dts-platform:
+        condition: service_healthy
+    environment:
+      - THING_ID=${AMBULANCE_THING_ID}
+      - YAML_ONTOLOGY_PATH=${AMBULANCE_YAML_ONTOLOGY_PATH}
+      - PLATFORM_URL=${AMBULANCE_PLATFORM_URL}
+      - PHYSICAL_ASSET_ID=${AMBULANCE_PHYSICAL_ASSET_ID}
+      - MODULE_URI=${AMBULANCE_MODULE_URI}
+      - MODULE_PORT=${AMBULANCE_MODULE_PORT}
+    network_mode: "host"
+
+  trafficlight-dt:
+    build: .
+    ports:
+      - "${TRAFFICLIGHT_MODULE_PORT}:${TRAFFICLIGHT_MODULE_PORT}"
+    depends_on:
+      wodt-dts-platform:
+        condition: service_healthy
+    environment:
+      - THING_ID=${TRAFFICLIGHT_THING_ID}
+      - YAML_ONTOLOGY_PATH=${TRAFFICLIGHT_YAML_ONTOLOGY_PATH}
+      - PLATFORM_URL=${TRAFFICLIGHT_PLATFORM_URL}
+      - PHYSICAL_ASSET_ID=${TRAFFICLIGHT_PHYSICAL_ASSET_ID}
+      - MODULE_URI=${TRAFFICLIGHT_MODULE_URI}
+      - MODULE_PORT=${TRAFFICLIGHT_MODULE_PORT}
+    network_mode: "host"
