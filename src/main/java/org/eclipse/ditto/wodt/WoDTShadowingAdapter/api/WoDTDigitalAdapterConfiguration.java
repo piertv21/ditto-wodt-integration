@@ -53,7 +53,7 @@ public final class WoDTDigitalAdapterConfiguration {
     ) {
         this.thing = this.obtainDittoThing(thingId);
         this.ontologyManager = new OntologyManagerImpl(this.thing, yamlOntologyPath);
-        this.digitalTwinUri = System.getenv("MODULE_URI") + ":" + System.getenv("MODULE_PORT");
+        this.digitalTwinUri = "http://" + System.getenv("MODULE_URI") + ":" + System.getenv("MODULE_PORT");
         this.portNumber = Integer.parseInt(System.getenv("MODULE_PORT"));
         this.physicalAssetId = physicalAssetId;
         this.platformToRegister = new HashSet<>(platformToRegister);

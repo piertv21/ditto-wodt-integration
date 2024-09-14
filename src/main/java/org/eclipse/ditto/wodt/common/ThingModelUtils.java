@@ -14,6 +14,8 @@ import java.util.Optional;
 
 import org.eclipse.ditto.things.model.Thing;
 import org.eclipse.ditto.wodt.model.ontology.WoDTVocabulary;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,6 +30,8 @@ import com.google.gson.JsonSyntaxException;
  * Utility class for Thing-related operations
  */
 public final class ThingModelUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ThingModelUtils.class);
 
     private static final HttpClient httpClient = HttpClient.newHttpClient();
     private static Optional<String> digitalTwinType;
@@ -186,7 +190,7 @@ public final class ThingModelUtils {
                 });
             }
         } catch (IOException | InterruptedException e) {
-            System.err.println("Error during thing model parsing: " + url);
+            LOGGER.error("Error during thing model parsing: " + url, e);
         }
     }
 
@@ -255,7 +259,7 @@ public final class ThingModelUtils {
                 }
             }
         } catch (JsonProcessingException e) {
-            System.out.println("Error");
+            LOGGER.error("Error during sub-properties extraction: " + jsonProperty, e);
         }
         return subProperties;
     }

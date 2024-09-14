@@ -5,9 +5,8 @@ WORKDIR /app
 
 COPY target/dittoWodtIntegration-1.0.0-jar-with-dependencies.jar /app/dittoWodtIntegration-1.0.0-jar-with-dependencies.jar
 
-RUN rm -f src/main/resources/*.yaml
-COPY ${YAML_ONTOLOGY_PATH} /app/resources/
-COPY src/main/resources/ /app/resources/
+COPY *.yaml /app/
+COPY src/main/resources/ /app/
 
 EXPOSE ${MODULE_PORT}
 

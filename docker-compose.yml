@@ -2,7 +2,6 @@ services:
   wodt-dts-platform:
     image: ghcr.io/webbased-wodt/wodt-dts-platform:1.1.15
     container_name: wodt-dts-platform
-    network_mode: "host" # problema
     environment:
       EXPOSED_PORT: ${PLATFORM_EXPOSED_PORT}
     ports:
@@ -13,6 +12,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 5m
+    #network_mode: "host"
 
   ambulance-dt:
     build: .

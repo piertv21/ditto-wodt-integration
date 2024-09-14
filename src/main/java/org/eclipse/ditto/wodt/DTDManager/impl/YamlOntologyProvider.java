@@ -1,11 +1,16 @@
 package org.eclipse.ditto.wodt.DTDManager.impl;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -13,6 +18,8 @@ import org.yaml.snakeyaml.Yaml;
  * and provides methods to access the parsed content.
  */
 public final class YamlOntologyProvider {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(YamlOntologyProvider.class);
 
     private final Optional<String> digitalTwinType;
     private final List<Optional<Map<String, String>>> properties;
@@ -24,11 +31,15 @@ public final class YamlOntologyProvider {
      */
     @SuppressWarnings("unchecked")
     public YamlOntologyProvider(String yamlFileName) {
-        try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(yamlFileName)) {
+        InputStream inputStream = null;
+        try {
+            inputStream = this.getClass().getClassLoader().getResourceAsStream(yamlFileName);
+            
             if (inputStream == null) {
-                throw new IllegalArgumentException("File not found: " + yamlFileName);
+                LOGGER.info("File not found in the classpath, try to get it from filesystem: " + yamlFileName);
+                inputStream = new FileInputStream(yamlFileName);
             }
-
+            
             Yaml yaml = new Yaml();
             Map<String, Object> data = yaml.load(inputStream);
             
@@ -67,10 +78,19 @@ public final class YamlOntologyProvider {
                 }
             }
             this.events = tempEvents;
-        } catch (Exception e) {
-            throw new RuntimeException("Error loading YAML file: " + e.getMessage(), e);
+
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException("Error during YAML file loading: " + e.getMessage(), e);
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                }
+            }
         }
     }
+
 
     /**
      * Returns the Digital Twin Type from the YAML file.
