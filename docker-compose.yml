@@ -47,6 +47,12 @@ services:
       - MODULE_URI=${TRAFFIC_LIGHT_A_MODULE_URI}
       - MODULE_PORT=${TRAFFIC_LIGHT_A_MODULE_PORT}
     network_mode: "host"
+    healthcheck:
+      test: wget http://localhost:${TRAFFIC_LIGHT_A_MODULE_PORT}/dtkg || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5m
 
   traffic-light-b:
     image: ghcr.io/webbased-wodt/usecase-trafficlight-dt:1.1.1
