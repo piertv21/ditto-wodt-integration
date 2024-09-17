@@ -68,10 +68,10 @@ public final class WoDTDigitalAdapter {
         this.dittoClientThread.stopThread();
     }
 
-    private void handleRelationship(String key, boolean isDeletion) {
+    private void handleRelationship(String key, String value, boolean isDeletion) {
         configuration.getOntology().obtainPropertyValueType(key).ifPresent(
             relType -> {
-                configuration.getOntology().convertRelationship(key, relType).ifPresent(triple -> {
+                configuration.getOntology().convertRelationship(key, value).ifPresent(triple -> {
                     if (isDeletion) {
                         this.dtkgEngine.removeRelationship(triple.getLeft(), triple.getRight());
                         this.dtdManager.removeRelationship(key);
@@ -122,7 +122,7 @@ public final class WoDTDigitalAdapter {
         thing.getAttributes().ifPresent(attributes -> {
             attributes.forEach((attribute) -> {
                 if (attribute.getKey().toString().contains("rel-")) {
-                    handleRelationship(attribute.getKey().toString(), false);
+                    handleRelationship(attribute.getKey().toString(), attribute.getValue().asString(), false);
                 } else {
                     handleProperty(attribute.getKey().toString(), attribute.getValue().toString(), false, false, null);
                 }
@@ -171,17 +171,17 @@ public final class WoDTDigitalAdapter {
         switch (change.getAction()) {
             case CREATED:
             case UPDATED:
-                if (change.getThing().get().getAttributes().isPresent()) {
-                    change.getThing().get().getAttributes().get().forEach((attribute) -> {
+                change.getThing().get().getAttributes().ifPresent(attributes -> {
+                    attributes.forEach((attribute) -> {
                         if (attribute.getKey().toString().contains("rel-")) {
-                            handleRelationship(attribute.getKey().toString(), false);
+                            handleRelationship(attribute.getKey().toString(), attribute.getValue().asString(), false);
                         } else {
                             handleProperty(attribute.getKey().toString(), attribute.getValue().toString(), false, false, null);
                         }
                     });
-                }
-                if (change.getThing().get().getFeatures().isPresent()) {
-                    change.getThing().get().getFeatures().get().forEach((feature) -> {
+                });
+                change.getThing().get().getFeatures().ifPresent(features -> {
+                    features.forEach((feature) -> {
                         feature.getProperties().ifPresent(properties -> {
                             properties.forEach((property) -> {
                                 List<String> subProperties = extractSubPropertiesNames(property.getValue().toString());
@@ -203,13 +203,13 @@ public final class WoDTDigitalAdapter {
                                 .filter(event -> event.getFeature().isPresent() && event.getFeature().get().equals(feature.getId()))
                                 .forEach(event -> handleEvent(event.getField(), false, feature.getId()));
                     });
-                }
+                });
                 break;
             case DELETED:
                 String elementToDelete = change.getPath().toString().split("/")[2];
                 if (change.getPath().toString().contains("attributes")) {
                     if (elementToDelete.contains("rel-")) {
-                        handleRelationship(elementToDelete, true);
+                        handleRelationship(elementToDelete, null, true);
                     } else {
                         handleProperty(elementToDelete, null, false, true, null);
                     }
