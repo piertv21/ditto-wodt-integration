@@ -78,6 +78,9 @@ final class WoDTDigitalTwinInterfaceControllerImpl implements WoDTDigitalTwinInt
         wsContext.onConnect(context -> {
             context.enableAutomaticPings();
             this.webSockets.add(context);
+            if (context.session.isOpen()) {
+                context.send(this.dtkgEngine.getCurrentDigitalTwinKnowledgeGraph());
+            }
         });
         wsContext.onClose(webSockets::remove);
     }
