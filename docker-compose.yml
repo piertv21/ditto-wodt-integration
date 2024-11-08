@@ -1,6 +1,6 @@
 services:
   #wodt-dts-platform:
-  #  image: ghcr.io/webbased-wodt/wodt-dts-platform:1.1.15
+  #  image: ghcr.io/webbased-wodt/wodt-dts-platform:1.1.19
   #  container_name: wodt-dts-platform
   #  environment:
   #    EXPOSED_PORT: ${PLATFORM_EXPOSED_PORT}

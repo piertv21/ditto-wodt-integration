@@ -2,9 +2,9 @@ digitalTwinType: "https://smartcityontology.com/ontology#TrafficLight"
 
 properties:
   - name: "is-on"
-    domainPredicate: "https://trafficlightontology.com/ontology#isOn"
+    domainPredicate: "https://lampontology.com/ontology#isOn"
     type: "https://www.w3.org/2001/XMLSchema#boolean"
 
 actions:
   - name: "switch"
-    type: "https://trafficlightontology.com/ontology#SwitchCommand"
+    type: "https://lampontology.com/ontology#SwitchCommand"
